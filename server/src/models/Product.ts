@@ -1,0 +1,50 @@
+import mongoose from "mongoose";
+
+const productSchema = new mongoose.Schema(
+  {
+    tenantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Tenant",
+      required: true,
+      index: true,
+    },
+
+    name: {
+      type: String,
+      required: true,
+    },
+
+    sku: {
+      type: String,
+      required: true,
+    },
+
+    unit: {
+      type: String,
+      required: true,
+    },
+
+    gstPercent: {
+      type: Number,
+      default: 18,
+    },
+
+    defaultPrice: {
+      type: Number,
+      required: true,
+    },
+
+    stock: {
+      type: Number,
+      default: 0,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export default mongoose.model(
+  "Product",
+  productSchema
+);
