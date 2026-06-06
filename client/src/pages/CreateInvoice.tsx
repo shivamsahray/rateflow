@@ -33,6 +33,11 @@ interface InvoiceItem {
 function CreateInvoice() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [formData, setFormData] = useState({
+    customerId: '',
+    dueDate: '',
+    vehicleNumber: '', // New state
+  });
 
   const [customerId, setCustomerId] = useState("");
 //   const [invoiceNumber] = useState(
@@ -207,6 +212,7 @@ function CreateInvoice() {
         paymentStatus,
         notes,
         customerId,
+        vehicleNumber: formData.vehicleNumber,
 
         items: items.map((item) => ({
           ...item,
@@ -324,6 +330,30 @@ const grandTotal =
                     "
                     />
 
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Vehicle Number
+                  </label>
+
+                  <input
+                    type="text"
+                    value={formData.vehicleNumber}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        vehicleNumber: e.target.value,
+                      })
+                    }
+                    placeholder="HR26AB1234"
+                    className="
+                      w-full
+                      rounded-lg
+                      border
+                      border-slate-300
+                      p-3
+                    "
+                  />
                 </div>
 
             </div>
@@ -459,7 +489,7 @@ const grandTotal =
             </div>
 
             )}
-            <div className="mb-6">
+            {/* <div className="mb-6">
 
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                     Payment Status
@@ -495,7 +525,7 @@ const grandTotal =
 
                 </select>
 
-                </div>
+                </div> */}
 
           <div className="overflow-x-auto">
 

@@ -16,7 +16,8 @@ export const createInvoice = async (
       customerId,
       items,
       invoiceDate,
-      notes
+      notes,
+      vehicleNumber
     } = req.body;
     const tenant =
     await Tenant.findById(
@@ -71,6 +72,7 @@ export const createInvoice = async (
         items,
 
         subtotal,
+        vehicleNumber,
         gstAmount,
         grandTotal,
         totalAmount:

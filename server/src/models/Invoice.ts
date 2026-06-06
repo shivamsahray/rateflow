@@ -56,6 +56,8 @@ const invoiceSchema = new mongoose.Schema(
     default: Date.now,
     },
 
+    vehicleNumber: { type: String },
+
     paymentStatus: {
     type: String,
     enum: [
