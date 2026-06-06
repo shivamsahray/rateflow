@@ -1109,9 +1109,9 @@ const grandTotal =
                   {tenantDetails?.companyName}
               </h1>
 
-              <p className="text-slate-500">
+              {/* <p className="text-slate-500">
                   B2B Distributor Billing Platform
-              </p>
+              </p> */}
 
               <p className="mt-2 text-sm">
                   GSTIN:
@@ -1138,6 +1138,18 @@ const grandTotal =
           </div>
 
           <div className="text-right">
+
+            <p className="mt-0  gap-0">
+              <strong>Date:</strong>
+              <span>
+                {
+                  new Date(
+                    invoice.createdAt
+                  )
+                  .toLocaleDateString()
+                }
+              </span>
+            </p>
             
             <p className=" gap-0">
               <strong>Invoice No:</strong>
@@ -1173,17 +1185,7 @@ const grandTotal =
               </span>
             </p> */}
 
-            <p className="mt-0  gap-0">
-              <strong>Date:</strong>
-              <span>
-                {
-                  new Date(
-                    invoice.createdAt
-                  )
-                  .toLocaleDateString()
-                }
-              </span>
-            </p>
+            
 
           </div>
 

@@ -1254,6 +1254,24 @@ export default function InvoicePDF({
               </View>
 
             </View>
+            <View style={styles.invoiceInfoRow}>
+                <Text style={styles.invoiceInfoLabel}>
+                  Date
+                </Text>
+
+                <Text>
+                  :
+                  {" "}
+                  {
+                    new Date(
+                      invoice.createdAt
+                    )
+                      .toLocaleDateString(
+                        "en-IN"
+                      )
+                  }
+                </Text>
+              </View>
 
             <View style={styles.invoiceInfo}>
 
@@ -1277,24 +1295,7 @@ export default function InvoicePDF({
                 </Text>
               </View>
 
-              <View style={styles.invoiceInfoRow}>
-                <Text style={styles.invoiceInfoLabel}>
-                  Date
-                </Text>
-
-                <Text>
-                  :
-                  {" "}
-                  {
-                    new Date(
-                      invoice.createdAt
-                    )
-                      .toLocaleDateString(
-                        "en-IN"
-                      )
-                  }
-                </Text>
-              </View>
+              
 
               <View style={styles.invoiceInfoRow}>
                 <Text style={styles.invoiceInfoLabel}>
