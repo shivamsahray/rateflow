@@ -25,7 +25,7 @@ export const createInvoice = async (
     );
 
     const invoiceNumber =
-  `INV-${String(
+  `${String(            //INV REMOVED
     tenant!.invoiceCounter
   ).padStart(3, "0")}`;
 
@@ -200,7 +200,7 @@ async (
 
   return res.json({
     invoiceNumber:
-      `INV-${String(
+      `${String(      //INV REMOVED
         tenant?.invoiceCounter || 1
       ).padStart(3, "0")}`,
   });

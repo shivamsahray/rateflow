@@ -822,6 +822,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import {
+  BlobProvider,
   PDFDownloadLink,
 } from "@react-pdf/renderer";
 
@@ -885,10 +886,21 @@ function InvoiceDetails() {
   const printRef =
     useRef<HTMLDivElement>(null);
   
-  const handlePrint =
-    useReactToPrint({
-      contentRef: printRef
-    });
+  // const handlePrint =
+  //   useReactToPrint({
+  //     contentRef: printRef
+  //   });
+  const handlePrint = (url: string | null) => {
+    if (!url) return;
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    iframe.onload = () => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+    };
+  };
 
   useEffect(() => {
 
@@ -1046,7 +1058,7 @@ const grandTotal =
           }
         </PDFDownloadLink>
 
-        <button
+        {/* <button
           type="button"
           onClick={() => handlePrint()}
           className="
@@ -1059,7 +1071,21 @@ const grandTotal =
           "
         >
           Print Invoice
-        </button>
+        </button> */}
+        <BlobProvider document={<InvoicePDF invoice={{ ...invoice, tenantId: tenantDetails }} />}>
+          {({ url, loading }) => (
+            <button
+              onClick={() => handlePrint(url)}
+              disabled={loading}
+              className="flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 font-medium text-gray-700 hover:bg-gray-200"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              {loading ? "Loading Print..." : "Print"}
+            </button>
+          )}
+        </BlobProvider>
 
         <button
           type="button"
@@ -1132,7 +1158,7 @@ const grandTotal =
               <p className="text-sm">
                   {
                     tenantDetails?.email
-            } 
+                  } 
               </p>
             </div>
           </div>
