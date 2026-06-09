@@ -17,7 +17,8 @@ export const createInvoice = async (
       items,
       invoiceDate,
       notes,
-      vehicleNumber
+      vehicleNumber,
+      ewayBillNumber
     } = req.body;
     const tenant =
     await Tenant.findById(
@@ -75,6 +76,7 @@ export const createInvoice = async (
         vehicleNumber,
         gstAmount,
         grandTotal,
+        ewayBillNumber,
         totalAmount:
           subtotal,
         paidAmount:
@@ -206,3 +208,103 @@ async (
   });
 
 };
+
+export const updateInvoice = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+ 
+    // Ensure invoice belongs to this tenant
+    const existing = await Invoice.findOne({
+      _id: id,
+      tenantId: req.user?.tenantId,
+    });
+ 
+    if (!existing) {
+      return res.status(404).json({ message: "Invoice not found" });
+    }
+ 
+    const { items, notes, vehicleNumber, ewayBillNumber, invoiceDate, paymentTerms } =
+      req.body;
+ 
+    // Recalculate totals if items are being updated
+    let subtotal = existing.subtotal;
+    let gstAmount = existing.gstAmount;
+    let grandTotal = existing.grandTotal;
+ 
+    if (items && items.length > 0) {
+      subtotal = items.reduce(
+        (sum: number, item: any) => sum + item.quantity * item.price,
+        0
+      );
+ 
+      gstAmount = items.reduce(
+        (sum: number, item: any) =>
+          sum + (item.quantity * item.price * item.gstPercent) / 100,
+        0
+      );
+ 
+      grandTotal = subtotal + gstAmount;
+    }
+ 
+    // outstandingAmount = grandTotal - paidAmount (keep paidAmount intact)
+    const outstandingAmount = grandTotal - (existing.paidAmount || 0);
+ 
+    // Determine payment status based on outstanding
+    let paymentStatus = existing.paymentStatus;
+    if (outstandingAmount <= 0) {
+      paymentStatus = "Paid";
+    } else if ((existing.paidAmount || 0) > 0) {
+      paymentStatus = "Partial";
+    } else {
+      paymentStatus = "Pending";
+    }
+ 
+    const updated = await Invoice.findByIdAndUpdate(
+      id,
+      {
+        ...(items && { items }),
+        ...(invoiceDate && { invoiceDate }),
+        ...(notes !== undefined && { notes }),
+        ...(vehicleNumber !== undefined && { vehicleNumber }),
+        ...(ewayBillNumber !== undefined && { ewayBillNumber }),
+        ...(paymentTerms !== undefined && { paymentTerms }),
+        subtotal,
+        gstAmount,
+        grandTotal,
+        totalAmount: subtotal,
+        outstandingAmount,
+        paymentStatus,
+      },
+      { new: true }
+    )
+      .populate("customerId")
+      .populate("items.productId");
+ 
+    return res.status(200).json(updated);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+ 
+// ─── DELETE INVOICE ────────────────────────────────────────────────────────────
+export const deleteInvoice = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+ 
+    const invoice = await Invoice.findOneAndDelete({
+      _id: id,
+      tenantId: req.user?.tenantId,
+    });
+ 
+    if (!invoice) {
+      return res.status(404).json({ message: "Invoice not found" });
+    }
+ 
+    return res.status(200).json({ message: "Invoice deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+ 

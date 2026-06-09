@@ -4,6 +4,7 @@ import User from '../models/User';
 import Tenant from '../models/Tenant';
 import { generateToken } from '../utils/generateToken';
 import { AuthRequest } from '../middleware/authMiddleware';
+import Customer from '../models/Customer';
 
 export const register = async (
     req: Request,
@@ -42,6 +43,16 @@ export const register = async (
             password: hashedPassword,
             role: "OWNER",
         });
+
+        await Customer.create({
+            tenantId: tenant._id,
+            name: "CASH",
+            phone: "N/A",
+            gstNumber: "",
+            address: "Walk-in Customer",
+            outstandingAmount: 0,
+            isDefault: true
+        })
 
         const token = generateToken(
             user._id.toString(),
@@ -105,19 +116,26 @@ export const login = async (
     }
 };
 
-export const getMe = async (
-    req: AuthRequest,
-    res: Response
-) => {
+export const getMe = async (req: AuthRequest, res: Response) => {
     try {
-        const user = await User.findById(
-            req.user?.userId
-        ).select("-password");
-
-        res.status(200).json(user);
-    } catch {
-        res.status(500).json({
-            message: "Server Error",
+        const user = await User.findById(req.user?.userId).select("-password");
+ 
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+ 
+        // Tenant se companyName fetch karo
+        const tenant = await Tenant.findById(req.user?.tenantId).select(
+            "companyName plan logo"
+        );
+ 
+        res.status(200).json({
+            ...user.toObject(),
+            companyName: tenant?.companyName || "",
+            plan: tenant?.plan || "FREE",
+            logo: tenant?.logo || "",
         });
+    } catch {
+        res.status(500).json({ message: "Server Error" });
     }
 };

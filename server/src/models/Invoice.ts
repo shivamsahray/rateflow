@@ -92,6 +92,7 @@ const invoiceSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    ewayBillNumber: { type: String, default: "" },
 
     notes: {
     type: String,

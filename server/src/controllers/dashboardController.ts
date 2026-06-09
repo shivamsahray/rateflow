@@ -1,51 +1,43 @@
 import Customer from "../models/Customer";
 import Product from "../models/Product";
 import Invoice from "../models/Invoice";
-import { Request, Response } from "express";
+import { Response } from "express";
+import { AuthRequest } from "../middleware/authMiddleware";
 
-export const getDashboardStats =
-  async (req: Request, res: Response) => {
+export const getDashboardStats = async (req: AuthRequest, res: Response) => {
+  const tenantId = req.user?.tenantId;
 
-    const totalCustomers =
-      await Customer.countDocuments();
+  if (!tenantId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 
-    const totalProducts =
-      await Product.countDocuments();
+  const filter = { tenantId };
 
-    const totalInvoices =
-      await Invoice.countDocuments();
+  const totalCustomers = await Customer.countDocuments(filter);
+  const totalProducts  = await Product.countDocuments(filter);
+  const totalInvoices  = await Invoice.countDocuments(filter);
 
-    const invoices =
-      await Invoice.find();
+  const invoices = await Invoice.find(filter);
 
-    const outstanding =
-      invoices.reduce(
-        (sum, invoice) =>
-          sum + (invoice.outstandingAmount || 0),
-        0
-      );
+  const outstanding = invoices.reduce(
+    (sum, invoice) => sum + (invoice.outstandingAmount || 0),
+    0
+  );
 
-    const paidInvoices =
-      invoices.filter(
-        i => i.paymentStatus === "Paid"
-      ).length;
+  const paidInvoices = invoices.filter(
+    (i) => i.paymentStatus === "Paid"
+  ).length;
 
-    const pendingInvoices =
-      invoices.filter(
-        i =>
-          i.paymentStatus === "Pending" ||
-          i.paymentStatus === "Partial"
-      ).length;
+  const pendingInvoices = invoices.filter(
+    (i) => i.paymentStatus === "Pending" || i.paymentStatus === "Partial"
+  ).length;
 
-      
-
-    res.json({
-      totalCustomers,
-      totalProducts,
-      totalInvoices,
-      outstanding,
-      paidInvoices,
-      pendingInvoices
-    });
+  res.json({
+    totalCustomers,
+    totalProducts,
+    totalInvoices,
+    outstanding,
+    paidInvoices,
+    pendingInvoices,
+  });
 };
-

@@ -4,86 +4,118 @@ interface Props {
   onSubmit: (data: any) => void;
 }
 
-function CustomerForm({
-  onSubmit,
-}: Props) {
+function CustomerForm({ onSubmit }: Props) {
+  const [formData, setFormData] = useState({
+    name: "",
+    gstNumber: "",
+    phone: "",
+    address: "",
+    creditLimit: 0,
+  });
 
-  const [formData, setFormData] =
-    useState({
-      name: "",
-      gstNumber: "",
-      phone: "",
-      address: "",
-      creditLimit: 0,
-    });
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]:
-        e.target.value,
-    });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (
-    e: React.FormEvent
-  ) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     onSubmit(formData);
-
-    setFormData({
-      name: "",
-      gstNumber: "",
-      phone: "",
-      address: "",
-      creditLimit: 0,
-    });
+    setFormData({ name: "", gstNumber: "", phone: "", address: "", creditLimit: 0 });
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        name="name"
-        placeholder="Customer Name"
-        value={formData.name}
-        onChange={handleChange}
-      />
+    <form onSubmit={handleSubmit} className="space-y-4">
 
-      <input
-        name="gstNumber"
-        placeholder="GST Number"
-        value={formData.gstNumber}
-        onChange={handleChange}
-      />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-      <input
-        name="phone"
-        placeholder="Phone"
-        value={formData.phone}
-        onChange={handleChange}
-      />
+        {/* Customer Name */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
+            Customer Name <span className="text-red-400">*</span>
+          </label>
+          <input
+            name="name"
+            placeholder="e.g. ABC Industries"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 placeholder:text-slate-300 transition-all"
+          />
+        </div>
 
-      <input
-        name="address"
-        placeholder="Address"
-        value={formData.address}
-        onChange={handleChange}
-      />
+        {/* GST Number */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
+            GST Number
+          </label>
+          <input
+            name="gstNumber"
+            placeholder="e.g. 06ABCDE1234F1Z5"
+            value={formData.gstNumber}
+            onChange={handleChange}
+            className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 placeholder:text-slate-300 transition-all"
+          />
+        </div>
 
-      <input
-        name="creditLimit"
-        type="number"
-        placeholder="Credit Limit"
-        value={formData.creditLimit}
-        onChange={handleChange}
-      />
+        {/* Phone */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
+            Phone <span className="text-red-400">*</span>
+          </label>
+          <input
+            name="phone"
+            placeholder="e.g. 9876543210"
+            value={formData.phone}
+            onChange={handleChange}
+            required
+            className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 placeholder:text-slate-300 transition-all"
+          />
+        </div>
 
-      <button type="submit">
-        Add Customer
-      </button>
+        {/* Credit Limit */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
+            Credit Limit (₹)
+          </label>
+          <input
+            name="creditLimit"
+            type="number"
+            placeholder="e.g. 50000"
+            value={formData.creditLimit}
+            onChange={handleChange}
+            className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 placeholder:text-slate-300 transition-all"
+          />
+        </div>
+
+        {/* Address — full width */}
+        <div className="space-y-1.5 sm:col-span-2">
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
+            Address
+          </label>
+          <input
+            name="address"
+            placeholder="e.g. 12, Sector 18, Gurugram, Haryana"
+            value={formData.address}
+            onChange={handleChange}
+            className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 placeholder:text-slate-300 transition-all"
+          />
+        </div>
+
+      </div>
+
+      {/* Submit */}
+      <div className="flex justify-end pt-2">
+        <button
+          type="submit"
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add Customer
+        </button>
+      </div>
+
     </form>
   );
 }

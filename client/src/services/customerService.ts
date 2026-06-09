@@ -32,6 +32,13 @@ export const createCustomer = async (
   return response.data;
 };
 
+export const updateCustomer = async (id: string, customerData: any) => {
+  const response = await axios.put(`${API}/${id}`, customerData, {
+    headers: headers(),
+  });
+  return response.data;
+};
+ 
 export const deleteCustomer = async (
   id: string
 ) => {

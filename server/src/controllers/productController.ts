@@ -15,10 +15,13 @@ export const createProduct = async (
 
     res.status(201).json(product);
   } catch (error) {
-    res.status(500).json({
-      message: "Server Error",
-    });
-  }
+  console.error("Create Product Error:", error);
+
+  res.status(500).json({
+    message: "Server Error",
+    error,
+  });
+}
 };
 
 export const getProducts = async (
@@ -32,11 +35,14 @@ export const getProducts = async (
       });
 
     res.status(200).json(products);
-  } catch {
-    res.status(500).json({
-      message: "Server Error",
-    });
-  }
+  } catch (error) {
+  console.error("Create Product Error:", error);
+
+  res.status(500).json({
+    message: "Server Error",
+    error,
+  });
+}
 };
 
 export const updateProduct = async (
@@ -57,11 +63,14 @@ export const updateProduct = async (
       );
 
     res.status(200).json(product);
-  } catch {
-    res.status(500).json({
-      message: "Server Error",
-    });
-  }
+  } catch (error) {
+  console.error("Create Product Error:", error);
+
+  res.status(500).json({
+    message: "Server Error",
+    error,
+  });
+}
 };
 
 export const deleteProduct = async (
@@ -77,9 +86,12 @@ export const deleteProduct = async (
     res.status(200).json({
       message: "Product Deleted",
     });
-  } catch {
-    res.status(500).json({
-      message: "Server Error",
-    });
-  }
+  } catch (error) {
+  console.error("Create Product Error:", error);
+
+  res.status(500).json({
+    message: "Server Error",
+    error,
+  });
+}
 };

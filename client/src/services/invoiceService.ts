@@ -80,3 +80,22 @@ export const getNextInvoiceNumber =
 
     return response.data;
   };
+
+
+export const updateInvoice = async (id: string, data: any) => {
+  const res = await axios.put(`${API}/${id}`, data, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+  return res.data;
+};
+ 
+export const deleteInvoice = async (id: string) => {
+  const res = await axios.delete(`${API}/${id}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+  return res.data;
+};

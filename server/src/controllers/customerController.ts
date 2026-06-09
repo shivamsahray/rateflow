@@ -28,6 +28,9 @@ export const getCustomers = async (
   try {
     const customers = await Customer.find({
       tenantId: req.user?.tenantId,
+    }).sort({
+      isDefault: -1,
+      name: 1,
     });
 
     res.status(200).json(customers);
@@ -70,6 +73,26 @@ export const deleteCustomer = async (
   res: Response
 ) => {
   try {
+
+    const customer =
+      await Customer.findOne({
+        _id: req.params.id,
+        tenantId: req.user?.tenantId,
+      });
+
+    if (!customer) {
+      return res.status(404).json({
+        message: "Customer not found",
+      });
+    }
+
+    if (customer.isDefault) {
+      return res.status(400).json({
+        message:
+          "Default customer cannot be deleted",
+      });
+    }
+
     await Customer.findOneAndDelete({
       _id: req.params.id,
       tenantId: req.user?.tenantId,
@@ -78,9 +101,14 @@ export const deleteCustomer = async (
     res.status(200).json({
       message: "Customer Deleted",
     });
-  } catch {
+
+  } catch (error) {
+
+    console.error(error);
+
     res.status(500).json({
       message: "Server Error",
     });
+
   }
 };

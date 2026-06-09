@@ -2195,9 +2195,9 @@ export default function InvoicePDF({ invoice }: Props) {
                 </Text>
               </View>
               <View style={styles.metaRow}>
-                <Text style={styles.metaLabel}>Payment Status</Text>
+                <Text style={styles.metaLabel}>EWay Bill No.</Text>
                 <Text style={styles.metaValue}>
-                  {invoice.paymentStatus || "Pending"}
+                  {invoice.eWayBillNumber || "N/A"}
                 </Text>
               </View>
               <View style={styles.metaRow}>
@@ -2267,6 +2267,16 @@ export default function InvoicePDF({ invoice }: Props) {
                   </View>
                 )}
               </View>
+              {/* </View>
+                {invoice.ewayBillNumber && (
+                  <View style={styles.billingField}>
+                    <Text style={styles.billingLabel}>Vehicle No.:</Text>
+                    <Text style={styles.billingValue}>
+                      {invoice.eWayBillNumber}
+                    </Text>
+                  </View>
+                )}
+              </View> */}
 
             </View>
           </View>

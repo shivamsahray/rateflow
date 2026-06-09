@@ -32,6 +32,13 @@ export const createProduct = async (
   return response.data;
 };
 
+export const updateProduct = async (id: string, productData: any) => {
+  const response = await axios.put(`${API}/${id}`, productData, {
+    headers: headers(),
+  });
+  return response.data;
+};
+ 
 export const deleteProduct = async (
   id: string
 ) => {

@@ -50,8 +50,15 @@ function Dashboard() {
 
   const fetchDashboard = async () => {
     try {
+        // ✅ Token localStorage se lo aur Authorization header mein bhejo
+      const token = localStorage.getItem("token");
       const res = await axios.get(
-        "http://localhost:5000/api/dashboard/stats"
+        "http://localhost:5000/api/dashboard/stats",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setStats(res.data);

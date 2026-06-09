@@ -37,6 +37,7 @@ function CreateInvoice() {
     customerId: '',
     dueDate: '',
     vehicleNumber: '', // New state
+    ewayBillNumber: ''
   });
 
   const [customerId, setCustomerId] = useState("");
@@ -213,6 +214,7 @@ function CreateInvoice() {
         notes,
         customerId,
         vehicleNumber: formData.vehicleNumber,
+        ewayBillNumber: formData.ewayBillNumber,
 
         items: items.map((item) => ({
           ...item,
@@ -346,6 +348,30 @@ const grandTotal =
                       })
                     }
                     placeholder="HR26AB1234"
+                    className="
+                      w-full
+                      rounded-lg
+                      border
+                      border-slate-300
+                      p-3
+                    "
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    E-Way Bill
+                  </label>
+
+                  <input
+                    type="text"
+                    value={formData.ewayBillNumber}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        ewayBillNumber: e.target.value,
+                      })
+                    }
+                    placeholder="E-Way Bill Number"
                     className="
                       w-full
                       rounded-lg

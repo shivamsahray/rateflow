@@ -2,9 +2,11 @@ import express from "express";
 
 import {
   createInvoice,
+  deleteInvoice,
   getInvoiceById,
   getInvoices,
   getNextInvoiceNumber,
+  updateInvoice,
 } from "../controllers/invoiceController";
 
 import { authMiddleware } from "../middleware/authMiddleware";
@@ -34,7 +36,8 @@ router.get(
   authMiddleware,
   getInvoiceById
 );
-
+router.put("/:id", authMiddleware, updateInvoice);
+router.delete("/:id", authMiddleware, deleteInvoice);
 
 
 export default router;

@@ -1189,6 +1189,15 @@ const grandTotal =
               </p>
             )}
             </p>
+            
+            <p className="mt-0  gap-0">
+             {invoice.ewayBillNumber && (
+              <p className="mt-2">
+                <strong>E-Way Bill No:</strong>{" "}
+                {invoice.ewayBillNumber}
+              </p>
+            )}
+            </p>
 
             {/* <p className="mt-1 flex items-center gap-2">
               <strong>Status:</strong>
