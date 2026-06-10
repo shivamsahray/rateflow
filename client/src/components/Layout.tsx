@@ -237,6 +237,11 @@ function Layout() {
           }>
             📄 All Invoices
           </NavLink>
+          <NavLink to="/stock" className={({ isActive }) =>
+            `block px-4 py-3 rounded-lg transition-all ${isActive ? "bg-blue-600 text-white font-semibold" : "hover:bg-blue-50"}`
+          }>
+            📦 Stock
+          </NavLink>
 
           <NavLink to="/settings" className={({ isActive }) =>
             `block px-4 py-3 rounded-lg transition-all ${isActive ? "bg-blue-600 text-white font-semibold" : "hover:bg-blue-50"}`

@@ -15,6 +15,7 @@ import Invoices from "./pages/Invoices";
 import InvoiceDetails from "./pages/InvoiceDetails";
 import Settings from "./pages/Settings";
 import Layout from "./components/Layout";
+import Stock from "./pages/Stock";
 
 function App() {
   return (
@@ -66,6 +67,7 @@ function App() {
             path="/invoice/:id"
             element={<InvoiceDetails />}
           />
+          <Route path="/stock" element={<Stock />} />
 
           <Route
             path="/settings"

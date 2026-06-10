@@ -38,6 +38,10 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    lowStockThreshold: {
+      type: Number,
+      default: 10,  // jab stock 10 se kam ho toh alert
+    },
   },
   {
     timestamps: true,

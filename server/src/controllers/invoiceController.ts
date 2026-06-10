@@ -5,6 +5,7 @@ import PriceHistory from "../models/PriceHistory";
 
 import { AuthRequest } from "../middleware/authMiddleware";
 import Tenant from "../models/Tenant";
+import Product from "../models/Product";
 
 export const createInvoice = async (
   req: AuthRequest,
@@ -89,6 +90,12 @@ export const createInvoice = async (
         notes
       });
       
+    for (const item of invoice.items) {
+      await Product.findByIdAndUpdate(
+        item.productId,
+        { $inc: { stock: -item.quantity } }
+      );
+    }
 
     for (const item of items) {
 

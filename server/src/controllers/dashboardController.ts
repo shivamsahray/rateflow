@@ -32,6 +32,17 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     (i) => i.paymentStatus === "Pending" || i.paymentStatus === "Partial"
   ).length;
 
+  const lowStockProducts = await Product.countDocuments({
+  tenantId,
+  $expr: { $lte: ["$stock", "$lowStockThreshold"] },
+  stock: { $gt: 0 },  // out of stock alag count karo
+});
+
+const outOfStockProducts = await Product.countDocuments({
+  tenantId,
+  stock: { $lte: 0 },
+});
+
   res.json({
     totalCustomers,
     totalProducts,
@@ -39,5 +50,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     outstanding,
     paidInvoices,
     pendingInvoices,
+    lowStockProducts,
+    outOfStockProducts
   });
 };
