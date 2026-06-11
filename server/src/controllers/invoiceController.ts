@@ -251,7 +251,24 @@ export const updateInvoice = async (req: AuthRequest, res: Response) => {
       );
  
       grandTotal = subtotal + gstAmount;
+
+      // ✅ FIX 1: Pehle purane items ka stock WAPAS karo
+      for (const oldItem of existing.items) {
+        await Product.findByIdAndUpdate(
+          oldItem.productId,
+          { $inc: { stock: +oldItem.quantity } }
+        );
+      }
+ 
+      // ✅ FIX 2: Ab naye items ka stock GHATA do
+      for (const newItem of items) {
+        await Product.findByIdAndUpdate(
+          newItem.productId,
+          { $inc: { stock: -newItem.quantity } }
+        );
+      }
     }
+    
  
     // outstandingAmount = grandTotal - paidAmount (keep paidAmount intact)
     const outstandingAmount = grandTotal - (existing.paidAmount || 0);
@@ -306,6 +323,13 @@ export const deleteInvoice = async (req: AuthRequest, res: Response) => {
  
     if (!invoice) {
       return res.status(404).json({ message: "Invoice not found" });
+    }
+
+    for (const item of invoice.items) {
+      await Product.findByIdAndUpdate(
+        item.productId,
+        { $inc: { stock: +item.quantity } }
+      );
     }
  
     return res.status(200).json({ message: "Invoice deleted successfully" });
