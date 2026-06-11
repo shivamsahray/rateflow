@@ -12,3 +12,13 @@ export const recordPayment = async (
   return response.data;
 };
 
+// ✅ NEW: fetch payment history for an invoice
+export const getPaymentsByInvoice = async (
+  invoiceId: string
+) => {
+  const response = await api.get(
+    `/payments/invoice/${invoiceId}`
+  );
+
+  return response.data;
+};

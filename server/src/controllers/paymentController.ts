@@ -13,6 +13,7 @@ export const recordPayment = async (
     const {
       invoiceId,
       amount,
+      discount,
       paymentMode,
       referenceNumber,
       notes,
@@ -27,14 +28,15 @@ export const recordPayment = async (
 
     if (!invoice) {
       return res.status(404).json({
-        message:
-          "Invoice not found",
+        message: "Invoice not found",
       });
     }
 
-    const invoiceTotal =
-      invoice.grandTotal ||
-      invoice.totalAmount * 1.18;
+    const discountAmount = Number(discount) || 0;
+    const receivedAmount = Number(amount) || 0;
+
+    // Total being settled = amount received + discount given
+    const totalSettled = receivedAmount + discountAmount;
 
     const payment =
       await Payment.create({
@@ -43,50 +45,60 @@ export const recordPayment = async (
         customerId:
           invoice.customerId,
         invoiceId,
-        amount,
+        amount: receivedAmount,
+        discount: discountAmount,
         paymentMode,
         referenceNumber,
         notes,
       });
 
+    // Update paidAmount (only actual cash received, not discount)
     invoice.paidAmount =
-      (invoice.paidAmount || 0) +
-      amount;
+      (invoice.paidAmount || 0) + receivedAmount;
 
-    invoice.outstandingAmount =
-      Math.max(
-        invoiceTotal -
-          invoice.paidAmount,
-        0
-      );
+    // discountAmount is also settled from outstanding
+    const totalPaidAndDiscounted =
+      invoice.paidAmount + discountAmount;
 
-    if (
-      invoice.outstandingAmount <=
+    invoice.outstandingAmount = Math.max(
+      invoice.grandTotal - totalPaidAndDiscounted,
       0
-    ) {
-      invoice.paymentStatus =
-        "Paid";
-    } else if (
-      invoice.paidAmount > 0
-    ) {
-      invoice.paymentStatus =
-        "Partial";
+    );
+
+    // Update payment status
+    if (invoice.outstandingAmount <= 0) {
+      invoice.paymentStatus = "Paid";
+    } else if (invoice.paidAmount > 0 || discountAmount > 0) {
+      invoice.paymentStatus = "Partial";
     } else {
-      invoice.paymentStatus =
-        "Pending";
+      invoice.paymentStatus = "Pending";
     }
 
     await invoice.save();
 
-    res.status(201).json(
-      payment
-    );
+    res.status(201).json(payment);
   } catch (error) {
     console.log(error);
 
     res.status(500).json({
-      message:
-        "Payment creation failed",
+      message: "Payment creation failed",
     });
+  }
+};
+
+// GET /api/payments/invoice/:invoiceId — payment history for an invoice
+export const getPaymentsByInvoice = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    const payments = await Payment.find({
+      invoiceId: req.params.invoiceId,
+      tenantId: req.user?.tenantId,
+    }).sort({ createdAt: -1 });
+
+    res.json(payments);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
   }
 };
