@@ -16,6 +16,8 @@ import InvoiceDetails from "./pages/InvoiceDetails";
 import Settings from "./pages/Settings";
 import Layout from "./components/Layout";
 import Stock from "./pages/Stock";
+import CustomerLedger from "./pages/CustomerLedger";
+
 
 function App() {
   return (
@@ -73,6 +75,7 @@ function App() {
             path="/settings"
             element={<Settings />}
           />
+          <Route path="/customers/:customerId/ledger" element={<CustomerLedger />} />
 
         </Route>
       </Routes>

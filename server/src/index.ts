@@ -16,7 +16,7 @@ import paymentRoutes from "./routes/paymentRoutes";
 import upload from './middleware/uploadMiddleware';
 import dashboardRoutes from './routes/dashboardRoutes'
 import stockRoutes from "./routes/stockRoutes";
-
+import ledgerRoutes from "./routes/ledgerRoutes"
 
 
 
@@ -48,6 +48,7 @@ app.use(
   "/api/settings",
   settingsRoutes
 );
+app.use("/api/ledger", ledgerRoutes);
 
 app.get('/api/health',(_, res) => {
     res.status(200).json({
