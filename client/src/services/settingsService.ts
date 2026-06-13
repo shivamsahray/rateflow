@@ -22,3 +22,14 @@ async (data: any) => {
 
   return response.data;
 };
+
+export const getWhatsAppQR =
+async () => {
+
+  const response =
+    await api.get(
+      "/settings/whatsapp/qr"
+    );
+
+  return response.data;
+};

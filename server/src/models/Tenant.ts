@@ -43,6 +43,15 @@ const tenantSchema = new mongoose.Schema(
         type: String,
         default: "",
         },
+        whatsappConnected: {
+            type: Boolean,
+            default: false,
+        },
+
+        whatsappNumber: {
+            type: String,
+            default: "",
+        },
     },
     {
         timestamps: true,

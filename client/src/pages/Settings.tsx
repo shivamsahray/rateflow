@@ -5,6 +5,7 @@ import {
   getSettings,
   updateSettings,
 } from "../services/settingsService";
+import api from "../services/api";
 import { uploadImage } from "../services/uploadService";
 
 function Settings() {
@@ -22,11 +23,61 @@ function Settings() {
 
   const [isSaving, setIsSaving] =
     useState(false);
+  const [qr, setQr] = useState("");
+  const [isConnected,
+    setIsConnected] =
+    useState(false);
+
+    const loadStatus =
+      async () => {
+
+        const data =
+          await api.get(
+            "/settings/whatsapp/status"
+          );
+
+        setIsConnected(
+          data.data.connected
+        );
+      };
 
   const [uploadingField, setUploadingField] =
     useState<"logo" | "signature" | null>(
       null
     );
+    const loadQR = async () => {
+
+         try {
+            const data = await api.get(
+              "/settings/whatsapp/qr"
+            );
+
+            setQr(data.data.qr);
+
+            const interval = setInterval(
+              async () => {
+                const status =
+                  await api.get(
+                    "/settings/whatsapp/status"
+                  );
+
+                if (
+                  status.data.connected
+                ) {
+                  setIsConnected(true);
+                  setQr("");
+
+                  clearInterval(
+                    interval
+                  );
+                }
+              },
+              3000
+            );
+          } catch (err) {
+            console.log(err);
+          }
+      };
 
   useEffect(() => {
     const loadSettings =
@@ -53,7 +104,9 @@ function Settings() {
       };
 
     loadSettings();
+    loadStatus();
   }, []);
+  
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -318,6 +371,45 @@ function Settings() {
                 ? "Saving..."
                 : "Save Settings"}
             </button>
+          </div>
+          <div>
+            {/* <button
+            type="button"
+              onClick={loadQR}
+              className="mt-4 rounded bg-green-600 px-4 py-2 text-white"
+            >
+              Connect WhatsApp
+            </button> */}
+            {
+              isConnected ? (
+
+                <div
+                  className="
+                  text-green-600
+                  font-bold
+                  text-lg"
+                >
+                  ✅ WhatsApp Connected
+                </div>
+
+              ) : (
+
+                <>
+                  <button
+                    onClick={loadQR}
+                  >
+                    Connect WhatsApp
+                  </button>
+
+                  {qr && (
+                    <img
+                      src={qr}
+                      alt="QR"
+                    />
+                  )}
+                </>
+              )
+            }
           </div>
         </form>
       </div>
