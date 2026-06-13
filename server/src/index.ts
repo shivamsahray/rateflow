@@ -17,6 +17,8 @@ import upload from './middleware/uploadMiddleware';
 import dashboardRoutes from './routes/dashboardRoutes'
 import stockRoutes from "./routes/stockRoutes";
 import ledgerRoutes from "./routes/ledgerRoutes"
+import cron from "node-cron";
+import { sendOutstandingReminders } from "./services/whatsappService";
 
 
 
@@ -69,6 +71,10 @@ app.use(
   "/api/payments",
   paymentRoutes
 );
+cron.schedule("0 9 */15 * *", () => {
+  console.log("Triggering 15-day outstanding reminder...");
+  sendOutstandingReminders();
+});
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

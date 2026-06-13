@@ -6,7 +6,7 @@ import {
 } from "../controllers/settingsController";
 
 import { authMiddleware } from "../middleware/authMiddleware";
-import { getWhatsAppQR, getWhatsAppStatus } from "../controllers/whatsappController";
+import { getWhatsAppQR, getWhatsAppStatus, sendLedgerUpdate } from "../controllers/whatsappController";
 
 const router = express.Router();
 
@@ -33,5 +33,7 @@ router.get(
   authMiddleware,
   getWhatsAppStatus
 );
+
+router.post("whatsapp/send-ledger/:customerId", authMiddleware, sendLedgerUpdate);
 
 export default router;
