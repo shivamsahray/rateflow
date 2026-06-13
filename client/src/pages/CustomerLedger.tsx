@@ -512,8 +512,9 @@ export default function CustomerLedger() {
     if (!customerId) return;
     setWaSending(true);
     setWaResult(null);
+    
     try {
-      await api.post(`/whatsapp/send-ledger/${customerId}`);
+      await api.post(`/settings/whatsapp/send-ledger/${customerId}`);
       setWaResult({ type: "success", msg: "Message sent successfully on WhatsApp!" });
     } catch (err: any) {
       const msg = err?.response?.data?.message || "Failed to send WhatsApp message";

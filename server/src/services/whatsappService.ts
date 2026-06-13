@@ -70,13 +70,20 @@ export const sendWhatsAppMessage = async (
       return { success: false, error: "WhatsApp not connected" };
     }
 
-    const client = clients.get(tenantId);
-    if (!client) {
-      return { success: false, error: "WhatsApp client not found" };
-    }
-
+    let client = clients.get(tenantId);
+    console.log("Tenant:", tenantId);
+    console.log("Client Found:", !!client);
+    // if (!client) {
+    //   return { success: false, error: "WhatsApp client not found" };
+    // }
+    client = getOrCreateClient(tenantId);
+        await new Promise((resolve) =>
+        setTimeout(resolve, 8000)
+    );
     const chatId = formatPhone(phone);
+    console.log("Sending To:", chatId);
     await client.sendMessage(chatId, message);
+    console.log("Message Sent");
 
     return { success: true };
   } catch (error: any) {

@@ -19,6 +19,8 @@ import stockRoutes from "./routes/stockRoutes";
 import ledgerRoutes from "./routes/ledgerRoutes"
 import cron from "node-cron";
 import { sendOutstandingReminders } from "./services/whatsappService";
+import Tenant from "./models/Tenant";
+import { getOrCreateClient } from "./services/whatsappService";
 
 
 
@@ -77,6 +79,29 @@ cron.schedule("0 9 */15 * *", () => {
 });
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+// app.listen(PORT, () => {
+//     console.log(`Server is running on port ${PORT}`);
+// });
+app.listen(PORT, async () => {
+
+  console.log(
+    `Server is running on port ${PORT}`
+  );
+
+  const tenants =
+    await Tenant.find({
+      whatsappConnected: true
+    });
+
+  for (const tenant of tenants) {
+
+    console.log(
+      `Restoring WhatsApp for ${tenant.companyName}`
+    );
+
+    getOrCreateClient(
+      tenant._id.toString()
+    );
+  }
+
 });

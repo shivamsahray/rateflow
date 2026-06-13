@@ -34,6 +34,6 @@ router.get(
   getWhatsAppStatus
 );
 
-router.post("whatsapp/send-ledger/:customerId", authMiddleware, sendLedgerUpdate);
+router.post("/whatsapp/send-ledger/:customerId", authMiddleware, sendLedgerUpdate);
 
 export default router;

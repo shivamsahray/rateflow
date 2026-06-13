@@ -61,17 +61,29 @@ export const sendLedgerUpdate = async (req: AuthRequest, res: Response) => {
       customerId,
       paymentStatus: { $in: ["Pending", "Partial"] },
     }).select("invoiceNumber outstandingAmount");
+    // console.log("Customer:", customer);
+    // console.log("Customer Outstanding:", customer.outstandingAmount);
+    // console.log("Invoices:", pendingInvoices.length);
+    const totalOutstanding = pendingInvoices.reduce(
+    (sum, invoice) => sum + (invoice.outstandingAmount || 0),
+    0
+    );
 
-    if (customer.outstandingAmount <= 0 || pendingInvoices.length === 0) {
-      return res.status(400).json({
+    console.log("Total Outstanding:", totalOutstanding);
+    if (totalOutstanding <= 0 ) {
+    // console.log("FAILED CONDITION");
+    // console.log("Outstanding:", customer.outstandingAmount);
+    // console.log("Invoices:", pendingInvoices.length);
+
+    return res.status(400).json({
         message: "No outstanding amount for this customer",
-      });
+    });
     }
 
     const message = buildOutstandingReminderMessage(
       tenant.companyName,
       customer.name,
-      customer.outstandingAmount,
+      totalOutstanding,
       pendingInvoices.map((inv) => ({
         invoiceNumber: inv.invoiceNumber,
         amount: inv.outstandingAmount,
