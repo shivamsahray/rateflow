@@ -21,7 +21,7 @@ import cron from "node-cron";
 import { sendOutstandingReminders } from "./services/whatsappService";
 import Tenant from "./models/Tenant";
 import { getOrCreateClient } from "./services/whatsappService";
-
+import subscriptionRoutes from "./routes/subscriptionRoutes";
 
 
 connectDB();
@@ -68,11 +68,21 @@ app.use(
   "/api/upload",
   uploadRoutes
 );
+app.use("/api/subscription", subscriptionRoutes)
 app.use("/api/stock", stockRoutes);
 app.use(
   "/api/payments",
   paymentRoutes
 );
+cron.schedule("0 0 * * *", async () => {
+  console.log("Running daily subscription check");
+  const now = new Date();
+  const res = await Tenant.updateMany(
+    { subscriptionEndDate: { $lt: now }, accountStatus: { $in: ["ACTIVE", "PENDING"] } },
+    { $set: { accountStatus: "EXPIRED" } }
+  );
+  console.log(`Expired ${res.modifiedCount} tenants whose subscription ended`);
+});
 cron.schedule("0 9 */15 * *", () => {
   console.log("Triggering 15-day outstanding reminder...");
   sendOutstandingReminders();

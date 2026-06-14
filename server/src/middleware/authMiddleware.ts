@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User";
+import Tenant from "../models/Tenant";
 
 export interface AuthRequest extends Request {
     user?:{
@@ -43,3 +44,16 @@ export const authMiddleware = (
     }
 };
 
+
+export const subscriptionMiddleware = async (req: AuthRequest, res: Response, next: Function) => {
+  try {
+    const tenant = await Tenant.findById(req.user?.tenantId);
+    if (!tenant) return res.status(401).json({ message: "Tenant not found" });
+    if (tenant.accountStatus !== "ACTIVE") {
+      return res.status(403).json({ message: "Subscription expired or inactive" });
+    }
+    next();
+  } catch (err) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
