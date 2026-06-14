@@ -16,4 +16,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+ 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (
+      error.response?.status === 403 &&
+      error.response?.data?.subscriptionExpired === true
+    ) {
+      // Admin panel pe ye nahi hona chahiye
+      if (!window.location.pathname.startsWith("/admin")) {
+        window.location.href = "/subscription-expired";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+ 
+
 export default api;

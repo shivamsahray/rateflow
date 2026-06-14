@@ -1,38 +1,53 @@
+// import express from "express";
+
+// import {
+//   createCustomer,
+//   getCustomers,
+//   updateCustomer,
+//   deleteCustomer,
+// } from "../controllers/customerController";
+
+// import { authMiddleware } from "../middleware/authMiddleware";
+
+// const router = express.Router();
+
+// router.post(
+//   "/",
+//   authMiddleware,
+//   createCustomer
+// );
+
+// router.get(
+//   "/",
+//   authMiddleware,
+//   getCustomers
+// );
+
+// router.put(
+//   "/:id",
+//   authMiddleware,
+//   updateCustomer
+// );
+
+// router.delete(
+//   "/:id",
+//   authMiddleware,
+//   deleteCustomer
+// );
+
+// export default router;
+
 import express from "express";
-
-import {
-  createCustomer,
-  getCustomers,
-  updateCustomer,
-  deleteCustomer,
-} from "../controllers/customerController";
-
-import { authMiddleware } from "../middleware/authMiddleware";
+import { createCustomer, getCustomers, updateCustomer, deleteCustomer } from "../controllers/customerController";
+import { authMiddleware, subscriptionMiddleware } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
-router.post(
-  "/",
-  authMiddleware,
-  createCustomer
-);
+const auth = [authMiddleware, subscriptionMiddleware];
 
-router.get(
-  "/",
-  authMiddleware,
-  getCustomers
-);
-
-router.put(
-  "/:id",
-  authMiddleware,
-  updateCustomer
-);
-
-router.delete(
-  "/:id",
-  authMiddleware,
-  deleteCustomer
-);
+router.post("/",    ...auth, createCustomer);
+router.get("/",     ...auth, getCustomers);
+router.put("/:id",  ...auth, updateCustomer);
+router.delete("/:id", ...auth, deleteCustomer);
 
 export default router;

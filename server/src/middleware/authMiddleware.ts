@@ -45,15 +45,33 @@ export const authMiddleware = (
 };
 
 
-export const subscriptionMiddleware = async (req: AuthRequest, res: Response, next: Function) => {
+
+export const subscriptionMiddleware = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const tenant = await Tenant.findById(req.user?.tenantId);
-    if (!tenant) return res.status(401).json({ message: "Tenant not found" });
-    if (tenant.accountStatus !== "ACTIVE") {
-      return res.status(403).json({ message: "Subscription expired or inactive" });
+    const tenant = await Tenant.findById(req.user?.tenantId).select(
+      "accountStatus subscriptionEndDate plan"
+    );
+ 
+    if (!tenant) {
+      return res.status(401).json({ message: "Tenant not found" });
     }
+ 
+    if (tenant.accountStatus === "EXPIRED") {
+      return res.status(403).json({
+        message: "Subscription expired",
+        subscriptionExpired: true,   // ← frontend isko check karta hai
+        plan: tenant.plan,
+      });
+    }
+ 
+    // ACTIVE ya TRIAL — allow karo
     next();
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Server Error" });
   }
 };
+ 

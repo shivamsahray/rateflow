@@ -1,3 +1,6 @@
-2026/06/13-21:54:31.468 5 Reusing MANIFEST /home/shivam/Desktop/Shivam Drive/Shivam Folder/startup/rateflow/server/.wwebjs_auth/session-6a1ea037e39821207246e295/Default/Local Storage/leveldb/MANIFEST-000001
-2026/06/13-21:54:31.472 5 Recovering log #7
-2026/06/13-21:54:31.476 5 Reusing old log /home/shivam/Desktop/Shivam Drive/Shivam Folder/startup/rateflow/server/.wwebjs_auth/session-6a1ea037e39821207246e295/Default/Local Storage/leveldb/000007.log 
+2026/06/14-15:47:34.489 5 Reusing MANIFEST /home/shivam/Desktop/Shivam Drive/Shivam Folder/startup/rateflow/server/.wwebjs_auth/session-6a1ea037e39821207246e295/Default/Local Storage/leveldb/MANIFEST-000001
+2026/06/14-15:47:34.498 5 Recovering log #7
+2026/06/14-15:47:34.499 5 Reusing old log /home/shivam/Desktop/Shivam Drive/Shivam Folder/startup/rateflow/server/.wwebjs_auth/session-6a1ea037e39821207246e295/Default/Local Storage/leveldb/000007.log 
+2026/06/14-15:47:51.422 5 Level-0 table #11: started
+2026/06/14-15:47:51.429 5 Level-0 table #11: 16380 bytes OK
+2026/06/14-15:47:51.438 5 Delete type=0 #7

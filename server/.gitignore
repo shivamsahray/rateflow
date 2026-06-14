@@ -1,4 +1,8 @@
-.env
-nodemodules
-dist
+node_modules/
+dist/
 
+.wwebjs_auth/
+.wwebjs_cache/
+
+.env
+uploads/ 
