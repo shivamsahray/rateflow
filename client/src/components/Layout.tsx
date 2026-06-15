@@ -181,13 +181,13 @@ function Layout() {
         setCompanyName(res.data.companyName || res.data.name || "User");
       })
       .catch(() => {
-        navigate("/login");
+        navigate("/");
       });
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    navigate("/login");
+    navigate("/");
   };
 
   return (

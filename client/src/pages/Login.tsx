@@ -4,6 +4,7 @@ import { loginUser } from "../services/authService";
 
 function Login() {
   const navigate = useNavigate();
+  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
     email: "",
@@ -25,13 +26,21 @@ function Login() {
     e.preventDefault();
 
     try {
+      setError("");
       const data = await loginUser(formData);
 
       localStorage.setItem("token", data.token);
       navigate("/dashboard");
-    } catch (error) {
-      console.error(error);
+    } catch (err: any) {
+
+    if (err.response?.status === 401) {
+      setError("Invalid email or password");
+    } else {
+      setError("Something went wrong. Please try again.");
     }
+
+    console.error(err);
+  }
   };
 
   return (
@@ -94,6 +103,11 @@ function Login() {
                   className="mt-3 w-full rounded-3xl border border-slate-700/80 bg-slate-900 px-4 py-4 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-500/20"
                 />
               </label>
+              {error && (
+                <div className="rounded-xl bg-red-500/10 border border-red-500/30 p-3 text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
 
               <button
                 type="submit"

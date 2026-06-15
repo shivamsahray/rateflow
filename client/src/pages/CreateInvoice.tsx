@@ -39,7 +39,7 @@ function CreateInvoice() {
     vehicleNumber: '', // New state
     ewayBillNumber: ''
   });
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [customerId, setCustomerId] = useState("");
 //   const [invoiceNumber] = useState(
 //     `INV-${Date.now()}`
@@ -205,6 +205,9 @@ function CreateInvoice() {
 
 
   const handleSubmit = async () => {
+    if(isSubmitting) return;
+
+    setIsSubmitting(true);
     try {
      const invoice =
         await createInvoice({
@@ -243,6 +246,8 @@ function CreateInvoice() {
       console.error(error);
 
       alert("Failed to create invoice");
+    } finally{
+      setIsSubmitting(false);
     }
   };
   const subtotal = items.reduce(
@@ -827,11 +832,11 @@ const grandTotal =
           <button
             onClick={handleSubmit}
             disabled={
-              !customerId
+              !customerId || isSubmitting
             }
             className="mt-8 w-full rounded-xl bg-blue-600 py-4 text-lg font-semibold text-white hover:bg-blue-700 disabled:bg-slate-300"
           >
-            Create Invoice
+            {isSubmitting ? "Creating Invoice..." : "Create Invoice"}
           </button>
 
         </div>
