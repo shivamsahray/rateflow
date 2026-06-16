@@ -2,12 +2,12 @@
 // Ye screen tab dikhti hai jab API 403 + subscriptionExpired: true return kare
 
 import { useState } from "react";
-import api from "../services/api";
+// import api from "../services/api";
 
 export default function SubscriptionExpired() {
   const [copied, setCopied] = useState(false);
 
-  const upiId = ""; // apna UPI ID yahan dalo .env se ya hardcode
+  const upiId = "9318345144"; // apna UPI ID yahan dalo .env se ya hardcode
 
   const copyUpi = () => {
     navigator.clipboard.writeText(upiId);

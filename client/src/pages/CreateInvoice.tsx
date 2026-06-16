@@ -58,7 +58,7 @@ function CreateInvoice() {
       setNextInvoiceNumber
     ] = useState("");
 
-    const [paymentStatus, setPaymentStatus] =
+    const [paymentStatus, _setPaymentStatus] =
     useState("Pending");
 
     const [notes, setNotes] =
