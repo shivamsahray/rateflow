@@ -2,7 +2,7 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-   "engines": {
+  "engines": {
     "node": "20.20.2"
   },
   "main": "index.js",
