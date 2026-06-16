@@ -1,8 +1,6 @@
-node_modules/
-dist/
-
-.wwebjs_auth/
-.wwebjs_cache/
-
+node_modules
 .env
-uploads/ 
+.webjs_auth
+.webjs_cache
+uploads
+dist
