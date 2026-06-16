@@ -159,6 +159,7 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import API_URL from "../config/api";
 
 function Layout() {
   const [companyName, setCompanyName] = useState("...");
@@ -173,7 +174,7 @@ function Layout() {
     }
 
     axios
-      .get("http://localhost:5000/api/auth/me", {
+      .get(`${API_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {

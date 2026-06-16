@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import API_URL from "../config/api";
 
 function Stock() {
   const [products, setProducts] = useState([]);
@@ -7,7 +8,7 @@ function Stock() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     axios
-      .get("http://localhost:5000/api/stock", {
+      .get(`${API_URL}/stock`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setProducts(res.data));
@@ -16,12 +17,12 @@ function Stock() {
   const updateStock = async (id: any, quantity: any, type = "add") => {
     const token = localStorage.getItem("token");
     await axios.patch(
-      `http://localhost:5000/api/stock/${id}`,
+      `${API_URL}/stock/${id}`,
       { quantity: Number(quantity), type },
       { headers: { Authorization: `Bearer ${token}` } }
     );
     // refresh
-    const res = await axios.get("http://localhost:5000/api/stock", {
+    const res = await axios.get(`${API_URL}/stock`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     setProducts(res.data);

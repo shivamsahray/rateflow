@@ -33,6 +33,7 @@ import {
   FaFileInvoice,
   FaRupeeSign,
 } from "react-icons/fa";
+import API_URL from "../config/api";
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -53,7 +54,7 @@ function Dashboard() {
         // ✅ Token localStorage se lo aur Authorization header mein bhejo
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        "http://localhost:5000/api/dashboard/stats",
+        `${API_URL}/dashboard/stats`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

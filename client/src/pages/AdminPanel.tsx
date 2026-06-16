@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import API_URL from "../config/api";
 
-const API = "http://localhost:5000/api/admin";
+const API = `${API_URL}/admin`;
 
 interface Tenant {
   _id: string;
