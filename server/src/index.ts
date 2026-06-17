@@ -29,7 +29,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://rateflow.in",
   "https://www.rateflow.in",
-  "https://rateflow-1pf4.onrender.com/",
+  "https://rateflow-1pf4.onrender.com",
   "https://rateflow-lake.vercel.app"
 ];
 
