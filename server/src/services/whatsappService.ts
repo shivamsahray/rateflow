@@ -21,10 +21,10 @@ export const getOrCreateClient = (tenantId: string): Client => {
   if (clients.has(tenantId)) {
     return clients.get(tenantId)!;
   }
-  console.log(
-    "Chrome Path:",
-    process.env.PUPPETEER_EXECUTABLE_PATH
-  );
+  // console.log(
+  //   "Chrome Path:",
+  //   process.env.PUPPETEER_EXECUTABLE_PATH
+  // );
 
   const client = new Client({
     authStrategy: new LocalAuth({ clientId: tenantId }),
