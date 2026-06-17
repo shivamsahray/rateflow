@@ -26,7 +26,13 @@ export const getOrCreateClient = (tenantId: string): Client => {
     authStrategy: new LocalAuth({ clientId: tenantId }),
     // Puppeteer timeout increase karo
     puppeteer: {
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      headless: true,
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+      ],
     },
   });
 
