@@ -31,7 +31,7 @@ export const getOrCreateClient = (tenantId: string): Client => {
     // Puppeteer timeout increase karo
     puppeteer: {
       headless: true,
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+      // executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
