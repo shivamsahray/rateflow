@@ -18,6 +18,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@puppeteer/browsers": "^3.0.4",
     "@types/node-cron": "^3.0.11",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.10.0",
