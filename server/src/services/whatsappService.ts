@@ -34,15 +34,15 @@ export const getOrCreateClient = (tenantId: string): Client => {
     }),
     puppeteer: {
       headless: true,
-      executablePath:
-        process.env.PUPPETEER_EXECUTABLE_PATH ||
-        path.join(
-          process.cwd(),
-          "chrome",
-          "linux-146.0.7680.31",
-          "chrome-linux64",
-          "chrome"
-        ),
+      // executablePath:
+      //   process.env.PUPPETEER_EXECUTABLE_PATH ||
+      //   path.join(
+      //     process.cwd(),
+      //     "chrome",
+      //     "linux-146.0.7680.31",
+      //     "chrome-linux64",
+      //     "chrome"
+      //   ),
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
