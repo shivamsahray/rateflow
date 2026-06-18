@@ -23,7 +23,7 @@ import Tenant          from "./models/Tenant";
 connectDB();
 
 const app = express();
-// app.use(cors());
+app.use(cors());
 app.use(express.json());
 const allowedOrigins = [
   "http://localhost:5173",

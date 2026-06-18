@@ -7,7 +7,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "postinstall": "npx @puppeteer/browsers install chrome@stable",
+    "postinstall": "npx @puppeteer/browsers install chrome@146.0.7680.31",
     "dev": "ts-node-dev --respawn src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
