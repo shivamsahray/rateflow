@@ -82,6 +82,15 @@ cron.schedule("0 9 */15 * *", () => {
   console.log("[CRON] Triggering 15-day outstanding reminder...");
   sendOutstandingReminders();
 });
+setInterval(() => {
+  const used = process.memoryUsage();
+
+  console.log(
+    "RAM:",
+    Math.round(used.rss / 1024 / 1024),
+    "MB"
+  );
+}, 5000);
 
 // ─── Server start ─────────────────────────────────────────────────────────────
 
