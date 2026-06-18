@@ -1,0 +1,103 @@
+2026/06/18-10:25:39.669 4a63 Creating DB /home/shivam/Desktop/Shivam Drive/Shivam Folder/startup/rateflow/server/.wwebjs_auth/RemoteAuth-6a1ea037e39821207246e295/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb since it was missing.
+2026/06/18-10:25:39.694 4a63 Reusing MANIFEST /home/shivam/Desktop/Shivam Drive/Shivam Folder/startup/rateflow/server/.wwebjs_auth/RemoteAuth-6a1ea037e39821207246e295/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/06/18-10:29:36.002 4a63 Level-0 table #5: started
+2026/06/18-10:29:36.039 4a63 Level-0 table #5: 1072458 bytes OK
+2026/06/18-10:29:36.061 4a63 Delete type=0 #3
+2026/06/18-10:29:36.492 4a63 Level-0 table #7: started
+2026/06/18-10:29:36.521 4a63 Level-0 table #7: 1000917 bytes OK
+2026/06/18-10:29:36.528 4a63 Delete type=0 #4
+2026/06/18-10:29:36.535 4a63 Compacting 1@1 + 1@2 files
+2026/06/18-10:29:36.577 4a63 Generated table #8@1: 23321 keys, 885760 bytes
+2026/06/18-10:29:36.577 4a63 Compacted 1@1 + 1@2 files => 885760 bytes
+2026/06/18-10:29:36.584 4a63 compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/06/18-10:29:36.737 4a63 Level-0 table #10: started
+2026/06/18-10:29:36.774 4a63 Level-0 table #10: 985694 bytes OK
+2026/06/18-10:29:36.782 4a63 Delete type=0 #6
+2026/06/18-10:29:36.783 4a63 Delete type=2 #5
+2026/06/18-10:29:36.783 4a63 Delete type=2 #7
+2026/06/18-10:29:37.208 4a63 Compacting 1@1 + 1@2 files
+2026/06/18-10:29:37.279 4a63 Generated table #11@1: 36776 keys, 1527793 bytes
+2026/06/18-10:29:37.280 4a63 Compacted 1@1 + 1@2 files => 1527793 bytes
+2026/06/18-10:29:37.286 4a63 compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/06/18-10:29:37.286 4a63 Delete type=2 #8
+2026/06/18-10:29:37.287 4a63 Delete type=2 #10
+2026/06/18-10:29:40.830 4a63 Level-0 table #13: started
+2026/06/18-10:29:40.868 4a63 Level-0 table #13: 1222788 bytes OK
+2026/06/18-10:29:40.880 4a63 Delete type=0 #9
+2026/06/18-10:29:41.219 4a63 Compacting 1@1 + 1@2 files
+2026/06/18-10:29:41.271 4a63 Generated table #14@1: 51390 keys, 2210930 bytes
+2026/06/18-10:29:41.282 4a63 Generated table #15@1: 4282 keys, 189343 bytes
+2026/06/18-10:29:41.282 4a63 Compacted 1@1 + 1@2 files => 2400273 bytes
+2026/06/18-10:29:41.291 4a63 compacted to: files[ 0 0 2 0 0 0 0 ]
+2026/06/18-10:29:41.292 4a63 Delete type=2 #11
+2026/06/18-10:29:41.292 4a63 Delete type=2 #13
+2026/06/18-10:29:42.810 4a63 Level-0 table #17: started
+2026/06/18-10:29:42.842 4a63 Level-0 table #17: 1194264 bytes OK
+2026/06/18-10:29:42.850 4a63 Delete type=0 #12
+2026/06/18-10:29:42.858 4a63 Compacting 1@1 + 2@2 files
+2026/06/18-10:29:42.942 4a63 Generated table #18@1: 42271 keys, 2204968 bytes
+2026/06/18-10:29:42.962 4a63 Generated table #19@1: 10209 keys, 722728 bytes
+2026/06/18-10:29:42.963 4a63 Compacted 1@1 + 2@2 files => 2927696 bytes
+2026/06/18-10:29:42.970 4a63 compacted to: files[ 0 0 2 0 0 0 0 ]
+2026/06/18-10:29:42.970 4a63 Delete type=2 #14
+2026/06/18-10:29:42.970 4a63 Delete type=2 #15
+2026/06/18-10:29:42.970 4a63 Delete type=2 #17
+2026/06/18-10:29:43.290 4a63 Level-0 table #21: started
+2026/06/18-10:29:43.350 4a63 Level-0 table #21: 1401214 bytes OK
+2026/06/18-10:29:43.373 4a63 Delete type=0 #16
+2026/06/18-10:29:43.393 4a63 Compacting 1@1 + 2@2 files
+2026/06/18-10:29:43.473 4a63 Generated table #22@1: 52066 keys, 2211464 bytes
+2026/06/18-10:29:43.564 4a63 Generated table #23@1: 14227 keys, 1759423 bytes
+2026/06/18-10:29:43.565 4a63 Compacted 1@1 + 2@2 files => 3970887 bytes
+2026/06/18-10:29:43.577 4a63 compacted to: files[ 0 0 2 0 0 0 0 ]
+2026/06/18-10:29:45.356 4a63 Level-0 table #25: started
+2026/06/18-10:29:45.396 4a63 Level-0 table #25: 1107228 bytes OK
+2026/06/18-10:29:45.411 4a63 Delete type=2 #19
+2026/06/18-10:29:45.411 4a63 Delete type=2 #21
+2026/06/18-10:29:45.411 4a63 Delete type=0 #20
+2026/06/18-10:29:45.411 4a63 Delete type=2 #18
+2026/06/18-10:29:45.419 4a63 Compacting 1@1 + 2@2 files
+2026/06/18-10:29:45.506 4a63 Generated table #26@1: 56356 keys, 2218644 bytes
+2026/06/18-10:29:45.551 4a63 Generated table #27@1: 19631 keys, 2183851 bytes
+2026/06/18-10:29:45.557 4a63 Generated table #28@1: 1208 keys, 45665 bytes
+2026/06/18-10:29:45.557 4a63 Compacted 1@1 + 2@2 files => 4448160 bytes
+2026/06/18-10:29:45.566 4a63 compacted to: files[ 0 0 3 0 0 0 0 ]
+2026/06/18-10:29:45.566 4a63 Delete type=2 #25
+2026/06/18-10:29:49.112 4a68 Level-0 table #30: started
+2026/06/18-10:29:49.137 4a68 Level-0 table #30: 1072832 bytes OK
+2026/06/18-10:29:49.144 4a68 Delete type=2 #22
+2026/06/18-10:29:49.144 4a68 Delete type=2 #23
+2026/06/18-10:29:49.144 4a68 Delete type=0 #24
+2026/06/18-10:29:49.151 4a68 Compacting 1@1 + 3@2 files
+2026/06/18-10:29:49.236 4a68 Generated table #31@1: 50895 keys, 2212880 bytes
+2026/06/18-10:29:49.292 4a68 Generated table #32@1: 26458 keys, 2192527 bytes
+2026/06/18-10:29:49.309 4a68 Generated table #33@1: 9045 keys, 424424 bytes
+2026/06/18-10:29:49.310 4a68 Compacted 1@1 + 3@2 files => 4829831 bytes
+2026/06/18-10:29:49.317 4a68 compacted to: files[ 0 0 3 0 0 0 0 ]
+2026/06/18-10:29:54.234 4a63 Level-0 table #35: started
+2026/06/18-10:29:54.272 4a63 Level-0 table #35: 1150166 bytes OK
+2026/06/18-10:29:54.285 4a63 Delete type=2 #28
+2026/06/18-10:29:54.286 4a63 Delete type=2 #27
+2026/06/18-10:29:54.286 4a63 Delete type=0 #29
+2026/06/18-10:29:54.286 4a63 Delete type=2 #30
+2026/06/18-10:29:54.286 4a63 Delete type=2 #26
+2026/06/18-10:29:54.527 4a63 Compacting 1@1 + 3@2 files
+2026/06/18-10:29:54.577 4a63 Generated table #36@1: 52054 keys, 2221510 bytes
+2026/06/18-10:29:54.602 4a63 Generated table #37@1: 13643 keys, 2186059 bytes
+2026/06/18-10:29:54.622 4a63 Generated table #38@1: 33965 keys, 1056580 bytes
+2026/06/18-10:29:54.622 4a63 Compacted 1@1 + 3@2 files => 5464149 bytes
+2026/06/18-10:29:54.630 4a63 compacted to: files[ 0 0 3 0 0 0 0 ]
+2026/06/18-10:30:00.732 4a63 Level-0 table #40: started
+2026/06/18-10:30:00.768 4a63 Level-0 table #40: 1086981 bytes OK
+2026/06/18-10:30:00.775 4a63 Delete type=0 #34
+2026/06/18-10:30:00.775 4a63 Delete type=2 #33
+2026/06/18-10:30:00.775 4a63 Delete type=2 #31
+2026/06/18-10:30:00.775 4a63 Delete type=2 #35
+2026/06/18-10:30:00.775 4a63 Delete type=2 #32
+2026/06/18-10:30:01.296 4a63 Compacting 1@1 + 3@2 files
+2026/06/18-10:30:01.374 4a63 Generated table #41@1: 69184 keys, 2229517 bytes
+2026/06/18-10:30:01.409 4a63 Generated table #42@1: 15322 keys, 2181224 bytes
+2026/06/18-10:30:01.461 4a63 Generated table #43@1: 56893 keys, 1962961 bytes
+2026/06/18-10:30:01.461 4a63 Compacted 1@1 + 3@2 files => 6373702 bytes
+2026/06/18-10:30:01.470 4a63 compacted to: files[ 0 0 3 0 0 0 0 ]
+2026/06/18-10:30:01.471 4a63 Delete type=2 #40

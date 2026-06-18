@@ -1,8 +1,10 @@
-import { Client, LocalAuth } from "whatsapp-web.js";
+import { Client, RemoteAuth } from "whatsapp-web.js";
+import { MongoStore } from "wwebjs-mongo";
+import mongoose from "mongoose";
 import Tenant from "../models/Tenant";
 import Customer from "../models/Customer";
 import Invoice from "../models/Invoice";
-
+const store = new MongoStore({ mongoose });
 const clients = new Map<string, Client>();
 export const whatsappStatus = new Map<string, boolean>();
 
@@ -24,20 +26,21 @@ export const getOrCreateClient = (tenantId: string): Client => {
 
 
   const client = new Client({
-    authStrategy: new LocalAuth({ clientId: tenantId }),
-    // Puppeteer timeout increase karo
+    authStrategy: new RemoteAuth({
+      store,
+      clientId: tenantId,
+      backupSyncIntervalMs: 300000,
+    }),
     puppeteer: {
       headless: true,
-      
-     args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--no-first-run",
-      "--no-zygote",
-      "--single-process",
-    ],
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--no-first-run",
+        "--no-zygote",
+      ],
     },
   });
 
@@ -53,6 +56,11 @@ export const getOrCreateClient = (tenantId: string): Client => {
     whatsappStatus.set(tenantId, true);
     await Tenant.findByIdAndUpdate(tenantId, { whatsappConnected: true });
     console.log(`[WA] Ready for tenant ${tenantId}`);
+  });
+  client.on("remote_session_saved", () => {
+    console.log(
+      `[WA] Remote session saved for tenant ${tenantId}`
+    );
   });
 
   // ✅ FIX 1: auth_failure — linked device se logout hone pe ye fire hota hai
@@ -80,18 +88,18 @@ export const getOrCreateClient = (tenantId: string): Client => {
 // Pehle ye seedha getOrCreateClient call karta tha → QR loop
 // Ab pehle check karo ki LocalAuth session exist karta hai
 
-import * as fs from "fs";
-import * as path from "path";
+// import * as fs from "fs";
+// import * as path from "path";
 
-const sessionExists = (tenantId: string): boolean => {
-  // whatsapp-web.js LocalAuth session folder
-  const sessionPath = path.join(
-    process.cwd(),
-    ".wwebjs_auth",
-    `session-${tenantId}`
-  );
-  return fs.existsSync(sessionPath);
-};
+// const sessionExists = (tenantId: string): boolean => {
+//   // whatsapp-web.js LocalAuth session folder
+//   const sessionPath = path.join(
+//     process.cwd(),
+//     ".wwebjs_auth",
+//     `session-${tenantId}`
+//   );
+//   return fs.existsSync(sessionPath);
+// };
 
 export const restoreWhatsAppClients = async () => {
   try {
@@ -101,16 +109,18 @@ export const restoreWhatsAppClients = async () => {
     for (const tenant of connectedTenants) {
       const tenantId = tenant._id.toString();
 
-      // ✅ Session file exist kare tabhi restore karo
-      if (sessionExists(tenantId)) {
-        console.log(`[WA] Session found — restoring for ${tenant.companyName}`);
-        getOrCreateClient(tenantId);
-      } else {
-        // Session nahi hai — DB mein bhi false kardo
-        console.log(`[WA] No session found for ${tenant.companyName} — marking disconnected`);
-        await Tenant.findByIdAndUpdate(tenantId, { whatsappConnected: false });
-      }
+      console.log(
+        `[WA] Restoring session for ${tenant.companyName}`
+      );
+
+      getOrCreateClient(tenantId);
     }
+      // else {
+      //   // Session nahi hai — DB mein bhi false kardo
+      //   console.log(`[WA] No session found for ${tenant.companyName} — marking disconnected`);
+      //   await Tenant.findByIdAndUpdate(tenantId, { whatsappConnected: false });
+      // }
+    
   } catch (error) {
     console.error("[WA] Restore error:", error);
   }
