@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import Tenant from "../models/Tenant";
 import Customer from "../models/Customer";
 import Invoice from "../models/Invoice";
+import path from "path";
 const store = new MongoStore({ mongoose });
 const clients = new Map<string, Client>();
 export const whatsappStatus = new Map<string, boolean>();
@@ -33,6 +34,16 @@ export const getOrCreateClient = (tenantId: string): Client => {
     }),
     puppeteer: {
       headless: true,
+      executablePath:
+        process.env.NODE_ENV === "production"
+          ? path.join(
+              process.cwd(),
+              "chrome",
+              "linux-150.0.7871.24",
+              "chrome-linux64",
+              "chrome"
+            )
+          : undefined,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -43,6 +54,16 @@ export const getOrCreateClient = (tenantId: string): Client => {
       ],
     },
   });
+  console.log(
+    "Chrome Path:",
+    path.join(
+      process.cwd(),
+      "chrome",
+      "linux-150.0.7871.24",
+      "chrome-linux64",
+      "chrome"
+    )
+  );
 
   client.on("qr", () => {
     console.log(`[WA] QR Generated for tenant ${tenantId}`);
