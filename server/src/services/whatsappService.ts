@@ -53,16 +53,16 @@ export const getOrCreateClient = (tenantId: string): Client => {
       ],
     },
   });
-  console.log(
-    "Chrome Path:",
-    path.join(
-      process.cwd(),
-      "chrome",
-      "linux-150.0.7871.24",
-      "chrome-linux64",
-      "chrome"
-    )
-  );
+  // console.log(
+  //   "Chrome Path:",
+  //   path.join(
+  //     process.cwd(),
+  //     "chrome",
+  //     "linux-150.0.7871.24",
+  //     "chrome-linux64",
+  //     "chrome"
+  //   )
+  // );
 
   client.on("qr", () => {
     console.log(`[WA] QR Generated for tenant ${tenantId}`);

@@ -14,10 +14,12 @@ import Invoice from "../models/Invoice";
 // ─── Get QR Code ──────────────────────────────────────────────────────────────
 
 export const getWhatsAppQR = async (req: AuthRequest, res: Response) => {
+  console.log("[WA] QR endpoint hit");
   const tenantId = req.user?.tenantId as string;
   if (!tenantId) return res.status(401).json({ message: "Tenant not found" });
 
   const client = getOrCreateClient(tenantId);
+  console.log("[WA] Client created");
 
   // Agar already connected hai toh QR mat bhejo
   try {
@@ -29,6 +31,7 @@ export const getWhatsAppQR = async (req: AuthRequest, res: Response) => {
 
   // QR event — once only
   client.once("qr", async (qr) => {
+    console.log("[WA] QR event fired");
     const qrImage = await QRCode.toDataURL(qr);
     return res.json({ qr: qrImage, connected: false });
   });
