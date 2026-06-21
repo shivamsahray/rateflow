@@ -18,7 +18,8 @@ const paymentSchema = new mongoose.Schema(
     invoiceId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Invoice",
-      required: true,
+      required: false,
+      default: null
     },
 
     amount: {
