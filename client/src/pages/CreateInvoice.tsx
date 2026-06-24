@@ -21,6 +21,8 @@ interface Product {
   name: string;
   defaultPrice: number;
   gstPercent: number;
+  stock?: number;          // ✅ NEW
+  lowStockThreshold?: number; // ✅ NEW
 }
 
 interface InvoiceItem {
@@ -197,6 +199,31 @@ function CreateInvoice() {
 //       sum + item.quantity * item.price,
 //     0
 //   );
+
+  // ✅ NEW: Stock check helper — returns warning info for an item, or null if OK
+  const getStockWarning = (item: InvoiceItem) => {
+    if (!item.productId) return null;
+    const product = products.find((p) => p._id === item.productId);
+    if (!product || product.stock === undefined) return null;
+
+    if (product.stock <= 0) {
+      return { level: "out", available: product.stock };
+    }
+    if (item.quantity > product.stock) {
+      return { level: "exceeds", available: product.stock };
+    }
+    if (product.stock <= (product.lowStockThreshold ?? 10)) {
+      return { level: "low", available: product.stock };
+    }
+    return null;
+  };
+
+  // ✅ NEW: Check if ANY item in the invoice exceeds available stock
+  const hasStockIssue = items.some((item) => {
+    const w = getStockWarning(item);
+    return w?.level === "out" || w?.level === "exceeds";
+  });
+
   const selectedCustomer =
     customers.find(
         (customer) =>
@@ -206,6 +233,16 @@ function CreateInvoice() {
 
   const handleSubmit = async () => {
     if(isSubmitting) return;
+
+    // ✅ NEW: Stock check before submit — ask for confirmation if exceeds
+    if (hasStockIssue) {
+      const proceed = window.confirm(
+        "⚠️ Kuch products ka stock kam hai ya khatam ho gaya hai.\n\n" +
+        "Kya aap phir bhi invoice generate karna chahte hain?\n" +
+        "(Stock negative ho jayega, baad mein adjust karna padega)"
+      );
+      if (!proceed) return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -668,8 +705,31 @@ const grandTotal =
                               )
                             )
                           }
-                          className="w-24 rounded-lg border border-slate-300 p-2"
+                          className={`w-24 rounded-lg border p-2 ${
+                            getStockWarning(item)?.level === "out" ||
+                            getStockWarning(item)?.level === "exceeds"
+                              ? "border-red-400 bg-red-50"
+                              : getStockWarning(item)?.level === "low"
+                              ? "border-amber-400 bg-amber-50"
+                              : "border-slate-300"
+                          }`}
                         />
+
+                        {/* ✅ NEW: Inline stock warning */}
+                        {getStockWarning(item) && (
+                          <p className={`text-xs mt-1 font-medium ${
+                            getStockWarning(item)?.level === "low"
+                              ? "text-amber-600"
+                              : "text-red-600"
+                          }`}>
+                            {getStockWarning(item)?.level === "out" &&
+                              "⚠️ Out of stock"}
+                            {getStockWarning(item)?.level === "exceeds" &&
+                              `⚠️ Only ${getStockWarning(item)?.available} available`}
+                            {getStockWarning(item)?.level === "low" &&
+                              `⚠️ Low stock (${getStockWarning(item)?.available} left)`}
+                          </p>
+                        )}
 
                       </td>
 

@@ -12,6 +12,7 @@ function ProductForm({ onSubmit }: Props) {
     gstPercent: 18,
     defaultPrice: 0,
     stock: 0,
+    lowStockThreshold: 10, // ✅ NEW
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,7 +22,15 @@ function ProductForm({ onSubmit }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
-    setFormData({ name: "", sku: "", unit: "", gstPercent: 18, defaultPrice: 0, stock: 0 });
+    setFormData({
+      name: "",
+      sku: "",
+      unit: "",
+      gstPercent: 18,
+      defaultPrice: 0,
+      stock: 0,
+      lowStockThreshold: 10,
+    });
   };
 
   return (
@@ -118,6 +127,24 @@ function ProductForm({ onSubmit }: Props) {
             onChange={handleChange}
             className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 placeholder:text-slate-300 transition-all"
           />
+        </div>
+
+        {/* ✅ NEW: Low Stock Threshold */}
+        <div className="space-y-1.5 sm:col-span-2">
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
+            Low Stock Alert Threshold
+          </label>
+          <input
+            name="lowStockThreshold"
+            type="number"
+            placeholder="e.g. 10"
+            value={formData.lowStockThreshold}
+            onChange={handleChange}
+            className="w-full px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 placeholder:text-slate-300 transition-all"
+          />
+          <p className="text-xs text-slate-400">
+            Jab stock is number ke barabar ya kam ho jaye toh "Low Stock" alert dikhega
+          </p>
         </div>
 
       </div>

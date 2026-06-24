@@ -364,6 +364,7 @@ interface Product {
   defaultPrice: number;
   stock: number;
   gstPercent: number;
+  lowStockThreshold?: number; // ✅ NEW
 }
 
 // ─── EDIT PRODUCT MODAL ───────────────────────────────────────────────────────
@@ -382,6 +383,7 @@ function EditProductModal({ product, onClose, onSave }: EditProductModalProps) {
     defaultPrice: product.defaultPrice,
     stock: product.stock,
     gstPercent: product.gstPercent,
+    lowStockThreshold: product.lowStockThreshold ?? 10, // ✅ NEW
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -527,6 +529,24 @@ function EditProductModal({ product, onClose, onSave }: EditProductModalProps) {
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* ✅ NEW: Low Stock Threshold */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Low Stock Alert Threshold
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={form.lowStockThreshold}
+                onChange={(e) => handleChange("lowStockThreshold", Number(e.target.value))}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-100"
+                placeholder="e.g. 10"
+              />
+              <p className="mt-1 text-xs text-slate-400">
+                Jab stock is number ke barabar ya kam ho jaye toh "Low Stock" alert dikhega
+              </p>
             </div>
 
             {error && (
