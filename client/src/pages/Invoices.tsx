@@ -406,7 +406,7 @@ function EditModal({ invoice, onClose, onSave }: EditModalProps) {
       />
  
       {/* Side panel */}
-      <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-2xl flex-col bg-white shadow-2xl">
+      <div className="fixed inset-y-0 right-0 z-50 flex w-full  flex-col bg-white shadow-2xl">
  
         {/* ── Header ── */}
         <div className="flex items-center justify-between border-b bg-slate-900 px-6 py-4">
@@ -685,7 +685,7 @@ function DeleteDialog({ invoice, onClose, onConfirm, deleting }: DeleteDialogPro
         onClick={onClose}
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+        <div className="w-full w-full rounded-2xl bg-white p-6 shadow-2xl">
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
             <TrashIcon />
           </div>
@@ -760,7 +760,7 @@ function Invoices() {
  
   return (
     <div className="min-h-screen bg-slate-50 p-6 lg:p-8">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto w-full">
  
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">

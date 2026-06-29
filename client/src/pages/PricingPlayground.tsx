@@ -208,7 +208,7 @@ function PricingPlayground() {
     <div className="min-h-screen bg-slate-50 font-sans">
       {/* Page Header */}
       <div className="bg-white border-b border-slate-200 px-8 py-5">
-        <div className="max-w-3xl mx-auto">
+        <div className="w-full mx-auto">
           <h1 className="text-xl font-semibold text-slate-800 tracking-tight">
             Pricing Playground
           </h1>
@@ -218,7 +218,7 @@ function PricingPlayground() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-8 py-8 space-y-6">
+      <div className="w-full mx-auto px-8 py-8 space-y-6">
         {/* Lookup Card */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
           <div className="px-6 py-4 border-b border-slate-100">

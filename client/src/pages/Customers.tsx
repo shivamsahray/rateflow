@@ -257,7 +257,7 @@ function Customers() {
  
       {/* Page Header */}
       <div className="bg-white border-b border-slate-200 px-8 py-5">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+        <div className="w-full mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold text-slate-800 tracking-tight">Customers</h1>
             <p className="text-sm text-slate-500 mt-0.5">Manage your B2B customer accounts</p>
@@ -268,7 +268,7 @@ function Customers() {
         </div>
       </div>
  
-      <div className="max-w-5xl mx-auto px-8 py-8 space-y-8">
+      <div className="w-full mx-auto px-8 py-8 space-y-8">
  
         {/* Add button */}
         <div className="flex justify-end">

@@ -202,7 +202,7 @@ function Dashboard() {
   const isGrowthPositive = stats.revenueGrowth >= 0;
 
   return (
-    <div className="max-w-7xl mx-auto p-6 sm:p-8">
+    <div className="w-full px-8 py-8 sm:p-8">
 
       {/* ── Header + Quick Actions ── */}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">

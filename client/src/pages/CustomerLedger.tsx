@@ -1935,7 +1935,7 @@ export default function CustomerLedger() {
  
       {/* ── Page Header ── */}
       <div className="bg-white border-b border-slate-200 px-8 py-5">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="w-full mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate("/customers")}
@@ -2013,7 +2013,7 @@ export default function CustomerLedger() {
         </div>
       </div>
  
-      <div className="max-w-6xl mx-auto px-8 py-8 space-y-6">
+      <div className="w-full mx-auto px-8 py-8 space-y-6">
  
         {/* ── Customer Info + Summary Cards ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

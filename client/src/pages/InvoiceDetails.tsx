@@ -1857,7 +1857,7 @@ function InvoiceDetails() {
     ">
  
       {/* ── Top Action Bar ── */}
-      <div className="mx-auto max-w-4xl mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mx-auto w-full mb-4 flex flex-wrap items-center justify-between gap-3">
  
         {/* Left: Print size selector */}
         <div className="flex items-center gap-2 bg-white border rounded-lg px-3 py-2 shadow-sm">
@@ -1930,7 +1930,7 @@ function InvoiceDetails() {
  
       <div ref={printRef} className="
         mx-auto
-        max-w-4xl
+        max-w-5xl
         rounded-2xl
         bg-white
         p-10
