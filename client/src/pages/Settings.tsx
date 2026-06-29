@@ -19,6 +19,7 @@ function Settings() {
       address: "",
       logo: "",
       signature: "",
+      defaultTerms: "", // ✅ NEW
     });
 
   const [isSaving, setIsSaving] =
@@ -113,6 +114,8 @@ function Settings() {
             data?.logo || "",
           signature:
             data?.signature || "",
+          defaultTerms:
+            data?.defaultTerms || "", // ✅ NEW
         });
       };
 
@@ -297,6 +300,26 @@ function Settings() {
                 value={formData.address}
                 onChange={handleChange}
                 rows={4}
+                className="mt-2 w-full resize-none rounded-md border border-slate-300 bg-white px-3 py-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+              />
+            </label>
+
+            {/* ✅ NEW: Default Terms & Conditions — applies to ALL invoices */}
+            <label className="block md:col-span-2">
+              <span className="text-sm font-medium text-slate-700">
+                Default Terms & Conditions
+              </span>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Ye lines har invoice ke PDF mein "Terms & Conditions" section mein dikhengi.
+                Har naya point ek nayi line mein likhein.
+              </p>
+
+              <textarea
+                name="defaultTerms"
+                placeholder={"Goods once sold will not be taken back.\nSubject to local jurisdiction.\nPayment due within agreed credit period."}
+                value={formData.defaultTerms}
+                onChange={handleChange}
+                rows={5}
                 className="mt-2 w-full resize-none rounded-md border border-slate-300 bg-white px-3 py-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
               />
             </label>

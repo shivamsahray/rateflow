@@ -62,6 +62,10 @@ const tenantSchema = new mongoose.Schema(
         type: String,
         default: "",
         },
+        defaultTerms: {
+            type: String,
+            default: "Goods once sold will not be taken back.\nSubject to local jurisdiction.\nPayment due within agreed credit period.\nInterest may apply on overdue balances.",
+        },
         whatsappConnected: {
             type: Boolean,
             default: false,

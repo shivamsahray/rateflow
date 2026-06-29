@@ -6,6 +6,7 @@ import { getLastPrice } from "../services/pricingService";
 import { createInvoice } from "../services/invoiceService";
 import { getNextInvoiceNumber } from "../services/invoiceService";
 import { useNavigate } from "react-router-dom";
+import Select, { components } from "react-select";
 
 interface Customer {
   _id: string;
@@ -16,15 +17,85 @@ interface Customer {
   outstandingAmount?: number;
 }
 
+// interface Product {
+//   _id: string;
+//   name: string;
+//   defaultPrice: number;
+//   gstPercent: number;
+//   stock?: number;          // ✅ NEW
+//   lowStockThreshold?: number; // ✅ NEW
+// }
 interface Product {
   _id: string;
   name: string;
-  defaultPrice: number;
-  gstPercent: number;
-  stock?: number;          // ✅ NEW
-  lowStockThreshold?: number; // ✅ NEW
-}
+  sku?: string;
+  unit?: string;
 
+  defaultPrice: number;
+
+  gstPercent: number;
+
+  stock?: number;
+
+  lowStockThreshold?: number;
+}
+const ProductSingleValue = (props: any) => {
+  return (
+    <components.SingleValue {...props}>
+      <div className="flex items-center justify-between w-full">
+        <span className="font-medium">
+          {props.data.label}
+        </span>
+
+        <span className="ml-3 text-xs text-gray-500">
+          ₹{props.data.price}
+          {props.data.unit ? ` / ${props.data.unit}` : ""}
+        </span>
+      </div>
+    </components.SingleValue>
+  );
+};
+const ProductOption = (props: any) => {
+  return (
+    <components.Option {...props}>
+      <div className="flex justify-between items-start">
+        <div>
+          <div className="font-medium text-gray-800">
+            {props.data.label}
+          </div>
+
+          <div className="text-xs text-gray-500 mt-1">
+            SKU : {props.data.sku || "-"}
+          </div>
+        </div>
+
+        <div className="text-right">
+          <div className="font-semibold text-blue-600">
+            ₹{props.data.price}
+            {props.data.unit ? ` / ${props.data.unit}` : ""}
+          </div>
+
+          <div className="mt-1">
+            {(props.data.stock ?? 0) <= 0 ? (
+              <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+                ❌ Out of Stock
+              </span>
+            ) : (props.data.stock ?? 0) <=
+              (props.data.lowStockThreshold ?? 10) ? (
+              <span className="rounded bg-yellow-100 px-2 py-0.5 text-xs font-semibold text-yellow-700">
+                ⚠️ Low Stock : {props.data.stock}
+              </span>
+            ) : (
+              <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
+                ✓ Stock : {props.data.stock}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </components.Option>
+  );
+};
 interface InvoiceItem {
   productId: string;
   quantity: number;
@@ -34,7 +105,31 @@ interface InvoiceItem {
 
 function CreateInvoice() {
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const customerOptions = customers.map((customer) => ({
+    value: customer._id,
+    label: customer.name,
+  }));
   const [products, setProducts] = useState<Product[]>([]);
+  const productOptions = products.map((product) => ({
+    value: product._id,
+
+    label: product.name,
+
+    sku: product.sku,
+
+    unit: product.unit,
+
+    stock: product.stock,
+
+    price: product.defaultPrice,
+    
+    gstPercent: product.gstPercent,
+
+    lowStockThreshold:
+        product.lowStockThreshold,
+
+    product,
+  }));
   const [formData, setFormData] = useState({
     customerId: '',
     dueDate: '',
@@ -431,8 +526,21 @@ const grandTotal =
             <label className="mb-2 block text-sm font-medium text-slate-700">
               Customer
             </label>
-
-            <select
+            
+            <Select
+              options={customerOptions}
+              placeholder="Search Customer..."
+              value={
+                customerOptions.find(
+                  (c) => c.value === customerId
+                ) || null
+              }
+              onChange={(selected) =>
+                setCustomerId(selected?.value || "")
+              }
+              isSearchable
+            />
+            {/* <select
               value={customerId}
               onChange={(e) =>
                 setCustomerId(
@@ -453,7 +561,7 @@ const grandTotal =
                   {customer.name}
                 </option>
               ))}
-            </select>
+            </select> */}
 
           </div>
           {selectedCustomer && (
@@ -645,8 +753,36 @@ const grandTotal =
                     >
 
                       <td className="p-3">
+                       <Select
+                        options={productOptions}
+                        placeholder="Search Product..."
+                        value={
+                          productOptions.find(
+                            (p) => p.value === item.productId
+                          ) || null
+                        }
+                        components={{
+                          Option: ProductOption,
+                          SingleValue: ProductSingleValue,
+                        }}
+                        onChange={(selected) => {
+                          if (selected) {
+                            fetchPrice(index, selected.value);
+                          }
+                        }}
+                        isSearchable
 
-                        <select
+                        menuPortalTarget={document.body}
+                        menuPosition="fixed"
+
+                        styles={{
+                          menuPortal: (base) => ({
+                            ...base,
+                            zIndex: 9999,
+                          }),
+                        }}
+                      />
+                        {/* <select
                           value={
                             item.productId
                           }
@@ -684,7 +820,7 @@ const grandTotal =
                             )
                           )}
 
-                        </select>
+                        </select> */}
 
                       </td>
 

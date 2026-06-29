@@ -3166,8 +3166,12 @@ function InvoiceContentA4({ invoice }: { invoice: any }) {
     "Payment due within agreed credit period.",
     "Interest may apply on overdue balances.",
   ];
-  const termLines: string[] = tenant?.terms
-    ? tenant.terms.split("\n").filter(Boolean) : defaultTerms;
+  // ✅ FIX: tenant.defaultTerms (Settings se) use karo, fallback defaultTerms
+  const termLines: string[] = tenant?.defaultTerms
+    ? tenant.defaultTerms.split("\n").filter(Boolean) : defaultTerms;
+
+  // ✅ NEW: Is specific invoice ka apna note (CreateInvoice ke "Notes" field se)
+  const invoiceNote: string = invoice.notes?.trim() || "";
  
   const s = stylesA4;
  
@@ -3256,6 +3260,14 @@ function InvoiceContentA4({ invoice }: { invoice: any }) {
           {termLines.map((line: string, i: number) => (
             <Text key={i} style={s.termLine}>{i + 1}. {line.replace(/^\d+\.\s*/, "")}</Text>
           ))}
+
+          {/* ✅ NEW: Invoice-specific note, alag se dikhega agar present hai */}
+          {invoiceNote && (
+            <>
+              <Text style={[s.termsHeader, { marginTop: 6 }]}>Note</Text>
+              <Text style={s.termLine}>{invoiceNote}</Text>
+            </>
+          )}
         </View>
         <View style={s.summaryBox}>
           <View style={s.summaryRow}><Text style={s.summaryLabel}>Subtotal</Text><Text style={s.summaryValue}>Rs.{subtotal.toFixed(2)}</Text></View>
@@ -3305,6 +3317,9 @@ function InvoiceContentA5({ invoice }: { invoice: any }) {
   const invoiceDate = invoice.createdAt
     ? new Date(invoice.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
     : "—";
+
+  // ✅ NEW: Invoice-specific note (agar present hai)
+  const invoiceNote: string = invoice.notes?.trim() || "";
  
   return (
     <View style={sA5.outerBorder}>
@@ -3419,6 +3434,16 @@ function InvoiceContentA5({ invoice }: { invoice: any }) {
         </View>
       </View>
  
+      {/* ✅ NEW: Invoice-specific note */}
+      {invoiceNote && (
+        <View style={{ paddingHorizontal: 5, paddingTop: 3 }}>
+          <Text style={{ fontSize: 5.5, color: TEXT_MID }}>
+            <Text style={{ fontFamily: "Helvetica-Bold", color: PRIMARY }}>Note:  </Text>
+            {invoiceNote}
+          </Text>
+        </View>
+      )}
+
       {/* ── Bottom: Amount in Words | Sign ── */}
       <View style={sA5.signRow}>
         <View style={{ flex: 1, paddingRight: 8 }}>
