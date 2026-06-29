@@ -179,7 +179,7 @@ function statusBadge(status: string) {
 
 function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>(EMPTY_STATS);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchDashboard();
