@@ -29,7 +29,10 @@ export const createInvoice =
 
 
 export const getInvoices =
-  async () => {
+  async (
+    page?: number,
+    limit?: number
+  ) => {
 
   const response =
     await axios.get(
@@ -38,7 +41,10 @@ export const getInvoices =
         headers: {
           Authorization:
             `Bearer ${getToken()}`
-        }
+        },
+        params: page
+          ? { page, limit: limit || 10 }
+          : {}
       }
     );
 

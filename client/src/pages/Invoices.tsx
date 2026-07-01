@@ -728,15 +728,32 @@ function Invoices() {
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [deletingInvoice, setDeletingInvoice] = useState<Invoice | null>(null);
   const [deleting, setDeleting] = useState(false);
- 
+
+  // ── Pagination ──
+  const PAGE_SIZE = 10;
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalInvoices, setTotalInvoices] = useState(0);
+
   useEffect(() => {
     const loadInvoices = async () => {
-      const data = await getInvoices();
-      setInvoices(data);
+      setLoading(true);
+      const data = await getInvoices(page, PAGE_SIZE);
+
+      // Backward compatible: agar service purana array hi de raha ho to bhi chal jaaye
+      if (Array.isArray(data)) {
+        setInvoices(data);
+        setTotalPages(1);
+        setTotalInvoices(data.length);
+      } else {
+        setInvoices(data.invoices);
+        setTotalPages(data.totalPages || 1);
+        setTotalInvoices(data.total || data.invoices.length);
+      }
       setLoading(false);
     };
     loadInvoices();
-  }, []);
+  }, [page]);
  
   const handleSaved = (updated: Invoice) => {
     setInvoices((prev) =>
@@ -749,8 +766,21 @@ function Invoices() {
     setDeleting(true);
     try {
       await deleteInvoice(deletingInvoice._id);
-      setInvoices((prev) => prev.filter((inv) => inv._id !== deletingInvoice._id));
       setDeletingInvoice(null);
+      // Agar current page ka last invoice delete hua aur ye pehla page nahi hai, to ek page peeche chale jao
+      if (invoices.length === 1 && page > 1) {
+        setPage((p) => p - 1);
+      } else {
+        // warna isi page ko refresh kar do
+        const data = await getInvoices(page, PAGE_SIZE);
+        if (Array.isArray(data)) {
+          setInvoices(data);
+        } else {
+          setInvoices(data.invoices);
+          setTotalPages(data.totalPages || 1);
+          setTotalInvoices(data.total || data.invoices.length);
+        }
+      }
     } catch {
       alert("Delete failed. Please try again.");
     } finally {
@@ -767,7 +797,7 @@ function Invoices() {
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Invoices</h1>
             <p className="mt-0.5 text-sm text-slate-400">
-              {invoices.length} invoice{invoices.length !== 1 ? "s" : ""} total
+              {totalInvoices} invoice{totalInvoices !== 1 ? "s" : ""} total
             </p>
           </div>
         </div>
@@ -842,6 +872,61 @@ function Invoices() {
             </table>
           )}
         </div>
+
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="mt-4 flex items-center justify-between">
+            <p className="text-sm text-slate-500">
+              Page <span className="font-medium text-slate-700">{page}</span> of{" "}
+              <span className="font-medium text-slate-700">{totalPages}</span>
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                disabled={page === 1}
+                className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Previous
+              </button>
+
+              {/* Page number buttons */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(
+                    (p) =>
+                      p === 1 ||
+                      p === totalPages ||
+                      Math.abs(p - page) <= 1
+                  )
+                  .map((p, idx, arr) => (
+                    <span key={p} className="flex items-center">
+                      {idx > 0 && arr[idx - 1] !== p - 1 && (
+                        <span className="px-1 text-slate-300">…</span>
+                      )}
+                      <button
+                        onClick={() => setPage(p)}
+                        className={`min-w-[2rem] rounded-lg px-2.5 py-1.5 text-sm font-medium transition ${
+                          p === page
+                            ? "bg-slate-900 text-white"
+                            : "text-slate-600 hover:bg-slate-100"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    </span>
+                  ))}
+              </div>
+
+              <button
+                onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                disabled={page === totalPages}
+                className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
  
       {/* Edit Modal */}
@@ -867,4 +952,3 @@ function Invoices() {
 }
  
 export default Invoices;
- 

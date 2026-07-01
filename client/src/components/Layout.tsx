@@ -214,9 +214,9 @@ function Layout() {
         } bg-white border-r shadow-lg transition-all duration-300`}
       >
 
-        <div className="p-5 border-b">
+        <div className="h-16 px-5 border-b flex items-center">
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between w-full">
 
             {sidebarOpen && (
               <div>
@@ -229,6 +229,7 @@ function Layout() {
                 </p>
               </div>
             )}
+            
 
             <button
               onClick={() =>
@@ -238,6 +239,7 @@ function Layout() {
             >
               <Menu size={22} />
             </button>
+            
 
           </div>
 
@@ -408,7 +410,7 @@ function Layout() {
       <div className="flex-1">
 
         {/* Navbar */}
-        <header className="bg-white border-b px-8 py-4 flex justify-between items-center">
+        <header className="h-16 bg-white border-b px-8 flex justify-between items-center">
           <h2 className="font-semibold text-xl">RateFlow ERP</h2>
 
           <div className="flex items-center gap-4">

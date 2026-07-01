@@ -464,11 +464,42 @@ export const getInvoices = async (
   req: AuthRequest,
   res: Response
 ) => {
-  const invoices = await Invoice.find({
-    tenantId: req.user?.tenantId,
-  }).populate("customerId", "name");
+  try {
+    const tenantId = req.user?.tenantId;
+    const { page, limit } = req.query;
 
-  res.json(invoices);
+    // Agar page query param nahi bheja, purana behavior hi rahega (saari invoices, sorted latest-first)
+    if (!page) {
+      const invoices = await Invoice.find({ tenantId })
+        .populate("customerId", "name")
+        .sort({ invoiceDate: -1, createdAt: -1 });
+
+      return res.json(invoices);
+    }
+
+    const pageNum = Math.max(parseInt(page as string) || 1, 1);
+    const limitNum = Math.max(parseInt((limit as string) || "10") || 10, 1);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [invoices, total] = await Promise.all([
+      Invoice.find({ tenantId })
+        .populate("customerId", "name")
+        .sort({ invoiceDate: -1, createdAt: -1 }) // latest invoices sabse pehle
+        .skip(skip)
+        .limit(limitNum),
+      Invoice.countDocuments({ tenantId }),
+    ]);
+
+    return res.json({
+      invoices,
+      total,
+      page: pageNum,
+      totalPages: Math.max(Math.ceil(total / limitNum), 1),
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server Error" });
+  }
 };
 
 export const getInvoiceById = async (
