@@ -1629,7 +1629,7 @@
 // export default InvoiceDetails;
 
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
  
 import { useParams } from "react-router-dom";
  
@@ -1638,8 +1638,9 @@ import {
   PDFDownloadLink,
 } from "@react-pdf/renderer";
  
-import InvoicePDF
-from "../components/pdf/InvoicePDF";
+const InvoicePDF = React.lazy(() =>
+  import("../components/pdf/InvoicePDF")
+);
  
 import {
   getInvoiceById,
