@@ -10,14 +10,15 @@
 // export default router;
 
 import express from "express";
-import { getStockList, updateStock } from "../controllers/stockController";
+import { getStockLedger, getStockList, updateStock } from "../controllers/stockController";
 import { authMiddleware, subscriptionMiddleware } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
 const auth = [authMiddleware, subscriptionMiddleware];
 
-router.get("/",     ...auth, getStockList);
+router.get("/", ...auth, getStockList);
+router.get("/ledger", ...auth, getStockLedger);
 router.patch("/:id", ...auth, updateStock);
 
 export default router;

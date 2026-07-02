@@ -3,39 +3,46 @@ import axios from "axios";
 import API_URL from "../config/api";
 
 function Stock() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [ledger, setLedger] = useState<any[]>([]);
+
+  const loadData = async () => {
+    const token = localStorage.getItem("token");
+    const [stockRes, ledgerRes] = await Promise.all([
+      axios.get(`${API_URL}/stock`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      axios.get(`${API_URL}/stock/ledger`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    ]);
+
+    setProducts(stockRes.data);
+    setLedger(ledgerRes.data);
+  };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    axios
-      .get(`${API_URL}/stock`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => setProducts(res.data));
+    void loadData();
   }, []);
 
-  const updateStock = async (id: any, quantity: any, type = "add") => {
+  const updateStock = async (id: string, quantity: string, type = "add") => {
     const token = localStorage.getItem("token");
     await axios.patch(
       `${API_URL}/stock/${id}`,
       { quantity: Number(quantity), type },
       { headers: { Authorization: `Bearer ${token}` } }
     );
-    // refresh
-    const res = await axios.get(`${API_URL}/stock`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setProducts(res.data);
+    await loadData();
   };
 
   return (
     <div className="w-full mx-auto p-8">
       <h1 className="text-4xl font-bold text-gray-800 mb-2">Stock</h1>
-      <p className="text-gray-500 mb-8">Manage your product inventory</p>
+      <p className="text-gray-500 mb-8">Manage your product inventory and view stock movement history.</p>
 
-      <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+      <div className="mb-8 overflow-hidden rounded-xl border bg-white shadow-sm">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
+          <thead className="bg-gray-50 text-xs uppercase text-gray-500">
             <tr>
               <th className="px-6 py-4 text-left">Product</th>
               <th className="px-6 py-4 text-left">Unit</th>
@@ -52,34 +59,23 @@ function Stock() {
                 <td className="px-6 py-4 font-bold">{p.stock}</td>
                 <td className="px-6 py-4">
                   {p.stock <= 0 ? (
-                    <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-semibold">
-                      Out of Stock
-                    </span>
+                    <span className="rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-600">Out of Stock</span>
                   ) : p.stock <= p.lowStockThreshold ? (
-                    <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs font-semibold">
-                      Low Stock
-                    </span>
+                    <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-700">Low Stock</span>
                   ) : (
-                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold">
-                      In Stock
-                    </span>
+                    <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700">In Stock</span>
                   )}
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex gap-2">
-                    <input
-                      type="number"
-                      placeholder="Qty"
-                      className="border rounded px-2 py-1 w-20 text-sm"
-                      id={`qty-${p._id}`}
-                    />
+                    <input type="number" placeholder="Qty" className="w-20 rounded border px-2 py-1 text-sm" id={`qty-${p._id}`} />
                     <button
                       onClick={() => {
                         const input = document.getElementById(`qty-${p._id}`) as HTMLInputElement;
-                        updateStock(p._id, input.value, "add");
+                        void updateStock(p._id, input.value, "add");
                         input.value = "";
                       }}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                      className="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
                     >
                       + Add
                     </button>
@@ -89,6 +85,34 @@ function Stock() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="rounded-xl border bg-white p-4 shadow-sm">
+        <h2 className="mb-3 text-xl font-semibold text-gray-800">Stock Ledger</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-xs uppercase text-gray-500">
+              <tr>
+                <th className="px-3 py-2 text-left">Date</th>
+                <th className="px-3 py-2 text-left">Product</th>
+                <th className="px-3 py-2 text-left">Type</th>
+                <th className="px-3 py-2 text-left">Qty</th>
+                <th className="px-3 py-2 text-left">Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ledger.map((entry) => (
+                <tr key={entry._id} className="border-t">
+                  <td className="px-3 py-2">{new Date(entry.createdAt).toLocaleString()}</td>
+                  <td className="px-3 py-2">{entry.productId?.name || "—"}</td>
+                  <td className="px-3 py-2">{entry.type}</td>
+                  <td className="px-3 py-2">{entry.quantity}</td>
+                  <td className="px-3 py-2">{entry.balance}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

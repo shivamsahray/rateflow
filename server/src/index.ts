@@ -16,6 +16,9 @@ import dashboardRoutes from "./routes/dashboardRoutes";
 import stockRoutes     from "./routes/stockRoutes";
 import ledgerRoutes    from "./routes/ledgerRoutes";
 import adminRoutes     from "./routes/adminRoutes";
+import vendorRoutes    from "./routes/vendorRoutes";
+import purchaseRoutes  from "./routes/purchaseRoutes";
+import purchasePaymentRoutes from "./routes/purchasePaymentRoutes";
 import cron            from "node-cron";
 import { sendOutstandingReminders, restoreWhatsAppClients } from "./services/whatsappService";
 import Tenant          from "./models/Tenant";
@@ -59,6 +62,9 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/stock",     stockRoutes);
 app.use("/api/ledger",    ledgerRoutes);
 app.use("/api/admin",     adminRoutes);
+app.use("/api/vendors",   vendorRoutes);
+app.use("/api/purchases", purchaseRoutes);
+app.use("/api/purchase-payments", purchasePaymentRoutes);
 
 app.get("/api/health", (_, res) =>
   res.json({ success: true, message: "RateFlow API running" })

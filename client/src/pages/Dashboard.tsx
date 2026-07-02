@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import {
@@ -11,6 +11,10 @@ import {
   FaPlus,
   FaUserPlus,
   FaExclamationTriangle,
+  FaShoppingCart,
+  FaHandshake,
+  FaBuilding,
+  FaClipboardList,
 } from "react-icons/fa";
 import API_URL from "../config/api";
 
@@ -21,6 +25,29 @@ interface RecentInvoice {
   grandTotal: number;
   paymentStatus: string;
   invoiceDate: string;
+}
+
+interface RecentPurchase {
+  _id: string;
+  purchaseNumber: string;
+  vendorName: string;
+  grandTotal: number;
+  paymentStatus: string;
+  purchaseDate: string;
+}
+
+interface PendingVendorPayment {
+  _id: string;
+  vendorName: string;
+  outstandingAmount: number;
+  dueDate: string;
+}
+
+interface TopVendor {
+  _id: string;
+  name: string;
+  totalPurchase: number;
+  outstanding: number;
 }
 
 interface TopCustomer {
@@ -36,6 +63,7 @@ interface LowStockItem {
   stock: number;
   lowStockThreshold: number;
   unit: string;
+  suggestedReorderQty: number;
 }
 
 interface SalesTrendPoint {
@@ -43,10 +71,22 @@ interface SalesTrendPoint {
   amount: number;
 }
 
+interface PurchaseSummary {
+  totalPurchases: number;
+  vendorOutstanding: number;
+  purchaseOrdersThisMonth: number;
+  purchasesThisMonth: number;
+  paidPurchases: number;
+  partialPurchases: number;
+  pendingPurchases: number;
+  netBusiness: number;
+}
+
 interface DashboardStats {
   totalCustomers: number;
   totalProducts: number;
   totalInvoices: number;
+  totalVendors: number;
   outstanding: number;
   paidInvoices: number;
   pendingInvoices: number;
@@ -57,15 +97,21 @@ interface DashboardStats {
   thisMonthCollected: number;
   revenueGrowth: number;
   salesTrend: SalesTrendPoint[];
+  purchaseTrend: SalesTrendPoint[];
   recentInvoices: RecentInvoice[];
+  recentPurchases: RecentPurchase[];
+  purchaseSummary: PurchaseSummary;
   topOutstandingCustomers: TopCustomer[];
   lowStockList: LowStockItem[];
+  pendingVendorPayments: PendingVendorPayment[];
+  topVendors: TopVendor[];
 }
 
 const EMPTY_STATS: DashboardStats = {
   totalCustomers: 0,
   totalProducts: 0,
   totalInvoices: 0,
+  totalVendors: 0,
   outstanding: 0,
   paidInvoices: 0,
   pendingInvoices: 0,
@@ -76,9 +122,23 @@ const EMPTY_STATS: DashboardStats = {
   thisMonthCollected: 0,
   revenueGrowth: 0,
   salesTrend: [],
+  purchaseTrend: [],
   recentInvoices: [],
+  recentPurchases: [],
+  purchaseSummary: {
+    totalPurchases: 0,
+    vendorOutstanding: 0,
+    purchaseOrdersThisMonth: 0,
+    purchasesThisMonth: 0,
+    paidPurchases: 0,
+    partialPurchases: 0,
+    pendingPurchases: 0,
+    netBusiness: 0,
+  },
   topOutstandingCustomers: [],
   lowStockList: [],
+  pendingVendorPayments: [],
+  topVendors: [],
 };
 
 function fmtMoney(n: number) {
@@ -89,13 +149,16 @@ function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
 }
 
-// ─── Mini sparkline-style bar chart (no external lib) ────────────────────────
-
-function SalesChart({ data }: { data: SalesTrendPoint[] }) {
-  if (!data.length) return null;
+function TrendChart({ data, barClass, emptyText }: { data: SalesTrendPoint[]; barClass: string; emptyText: string }) {
+  if (!data.length) {
+    return (
+      <div className="h-32 flex items-center justify-center text-slate-300 text-sm">
+        {emptyText}
+      </div>
+    );
+  }
 
   const max = Math.max(...data.map((d) => d.amount), 1);
-  // Show last 14 days for readability on small screens, full 30 on wider
   const points = data.slice(-14);
 
   return (
@@ -107,23 +170,17 @@ function SalesChart({ data }: { data: SalesTrendPoint[] }) {
 
         return (
           <div key={p.date} className="flex-1 flex flex-col items-center justify-end gap-1.5 h-full group relative">
-            {/* Tooltip on hover */}
             <div className="absolute -top-7 hidden group-hover:flex bg-slate-900 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap z-10">
               {fmtMoney(p.amount)}
             </div>
-
-            {/* Bar (or baseline dash if no sale that day) */}
             {hasSale ? (
               <div
-                className={`w-full rounded-t transition-all ${
-                  isToday ? "bg-blue-600" : "bg-blue-400 group-hover:bg-blue-600"
-                }`}
+                className={`w-full rounded-t transition-all ${barClass} ${isToday ? "opacity-100" : "group-hover:opacity-90"}`}
                 style={{ height: `${heightPct}%` }}
               />
             ) : (
               <div className="w-full h-[3px] rounded-full bg-slate-200 group-hover:bg-slate-300" />
             )}
-
             <span className="text-[9px] text-slate-400">{fmtDate(p.date).slice(0, 2)}</span>
           </div>
         );
@@ -131,8 +188,6 @@ function SalesChart({ data }: { data: SalesTrendPoint[] }) {
     </div>
   );
 }
-
-// ─── Stat card ────────────────────────────────────────────────────────────────
 
 function StatCard({
   icon,
@@ -142,9 +197,9 @@ function StatCard({
   iconColor,
   link,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
-  value: React.ReactNode;
+  value: ReactNode;
   iconBg: string;
   iconColor: string;
   link?: string;
@@ -175,14 +230,12 @@ function statusBadge(status: string) {
   );
 }
 
-// ─── Main Dashboard ───────────────────────────────────────────────────────────
-
 function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>(EMPTY_STATS);
   const [_loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboard();
+    void fetchDashboard();
   }, []);
 
   const fetchDashboard = async () => {
@@ -203,158 +256,171 @@ function Dashboard() {
 
   return (
     <div className="w-full px-8 py-8 sm:p-8">
-
-      {/* ── Header + Quick Actions ── */}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-800">Dashboard</h1>
-          <p className="text-slate-500 mt-1.5 text-sm">
-            Here's what's happening with your business today
-          </p>
+          <p className="text-slate-500 mt-1.5 text-sm">Here&apos;s what&apos;s happening with your business today</p>
         </div>
 
-        <div className="flex gap-2">
-          <Link
-            to="/invoices"
-            className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors"
-          >
+        <div className="flex flex-wrap gap-2">
+          <Link to="/invoices" className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">
             <FaPlus className="text-xs" /> New Invoice
           </Link>
-          <Link
-            to="/customers"
-            className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-xl transition-colors"
-          >
+          <Link to="/customers" className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">
             <FaUserPlus className="text-xs" /> Add Customer
+          </Link>
+          <Link to="/purchases" className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">
+            <FaShoppingCart className="text-xs" /> New Purchase
+          </Link>
+          <Link to="/vendors" className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">
+            <FaBuilding className="text-xs" /> Add Vendor
           </Link>
         </div>
       </div>
 
-      {/* ── Top Stat Cards ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          icon={<FaUsers />}
-          iconBg="bg-blue-50"
-          iconColor="text-blue-500"
-          label="Customers"
-          value={stats.totalCustomers}
-          link="/customers"
-        />
-        <StatCard
-          icon={<FaBoxes />}
-          iconBg="bg-green-50"
-          iconColor="text-green-500"
-          label="Products"
-          value={stats.totalProducts}
-          link="/products"
-        />
-        <StatCard
-          icon={<FaFileInvoice />}
-          iconBg="bg-purple-50"
-          iconColor="text-purple-500"
-          label="Invoices"
-          value={stats.totalInvoices}
-          link="/all-invoices"
-        />
-        <StatCard
-          icon={<FaRupeeSign />}
-          iconBg="bg-red-50"
-          iconColor="text-red-500"
-          label="Outstanding"
-          value={<span className="text-red-600">{fmtMoney(stats.outstanding)}</span>}
-        />
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        <StatCard icon={<FaUsers />} iconBg="bg-blue-50" iconColor="text-blue-500" label="Customers" value={stats.totalCustomers} link="/customers" />
+        <StatCard icon={<FaBoxes />} iconBg="bg-green-50" iconColor="text-green-500" label="Products" value={stats.totalProducts} link="/products" />
+        <StatCard icon={<FaFileInvoice />} iconBg="bg-purple-50" iconColor="text-purple-500" label="Invoices" value={stats.totalInvoices} link="/all-invoices" />
+        <StatCard icon={<FaRupeeSign />} iconBg="bg-red-50" iconColor="text-red-500" label="Outstanding" value={<span className="text-red-600">{fmtMoney(stats.outstanding)}</span>} />
+        <StatCard icon={<FaShoppingCart />} iconBg="bg-amber-50" iconColor="text-amber-500" label="Total Purchases" value={<span className="text-slate-800">{fmtMoney(stats.purchaseSummary.totalPurchases)}</span>} link="/purchases" />
+        <StatCard icon={<FaHandshake />} iconBg="bg-indigo-50" iconColor="text-indigo-500" label="Vendor Outstanding" value={<span className="text-slate-800">{fmtMoney(stats.purchaseSummary.vendorOutstanding)}</span>} link="/vendors" />
+        <StatCard icon={<FaBuilding />} iconBg="bg-teal-50" iconColor="text-teal-500" label="Total Vendors" value={stats.totalVendors} link="/vendors" />
+        <StatCard icon={<FaClipboardList />} iconBg="bg-slate-100" iconColor="text-slate-600" label="Purchase Orders" value={stats.purchaseSummary.purchaseOrdersThisMonth} link="/purchases" />
       </div>
 
-      {/* ── Revenue + Sales Trend ── */}
       <div className="grid lg:grid-cols-3 gap-6 mb-6">
-
-        {/* Revenue this month */}
         <div className="lg:col-span-1 bg-white border border-slate-200 rounded-2xl p-6 flex flex-col">
-          <p className="text-sm text-slate-500 mb-1">This Month's Revenue</p>
+          <p className="text-sm text-slate-500 mb-1">Revenue</p>
           <div className="flex items-baseline gap-2 mb-2">
             <h2 className="text-3xl font-bold text-slate-800">{fmtMoney(stats.thisMonthRevenue)}</h2>
           </div>
 
-          <div className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full w-fit ${
-            isGrowthPositive ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"
-          }`}>
+          <div className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full w-fit ${isGrowthPositive ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}>
             {isGrowthPositive ? <FaArrowUp /> : <FaArrowDown />}
             {Math.abs(stats.revenueGrowth)}% vs last month
           </div>
 
           <div className="mt-5 pt-5 border-t border-slate-100 space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-slate-500">Collected</span>
-              <span className="font-semibold text-green-600">{fmtMoney(stats.thisMonthCollected)}</span>
+              <span className="text-slate-500">Purchases</span>
+              <span className="font-semibold text-amber-600">{fmtMoney(stats.purchaseSummary.purchasesThisMonth)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-slate-500">Last Month</span>
-              <span className="font-semibold text-slate-600">{fmtMoney(stats.lastMonthRevenue)}</span>
+              <span className="text-slate-500">Net</span>
+              <span className="font-semibold text-slate-700">{fmtMoney(stats.purchaseSummary.netBusiness)}</span>
             </div>
           </div>
         </div>
 
-        {/* Sales trend chart */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <p className="text-sm font-semibold text-slate-700">Sales Trend</p>
-              <p className="text-xs text-slate-400 mt-0.5">Last 14 days</p>
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <p className="text-sm font-semibold text-slate-700">Sales Trend</p>
+                <p className="text-xs text-slate-400 mt-0.5">Last 14 days</p>
+              </div>
+            </div>
+            <TrendChart data={stats.salesTrend} barClass="bg-blue-400" emptyText="No sales data yet" />
+          </div>
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <p className="text-sm font-semibold text-slate-700">Purchase Trend</p>
+                <p className="text-xs text-slate-400 mt-0.5">Last 14 days</p>
+              </div>
+            </div>
+            <TrendChart data={stats.purchaseTrend} barClass="bg-amber-400" emptyText="No purchase data yet" />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6 mb-6">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-slate-700">Pending Vendor Payments</p>
+            <Link to="/vendor-payments" className="text-xs text-blue-600 hover:text-blue-700 font-medium">View all</Link>
+          </div>
+          <div className="mt-4 space-y-3">
+            {stats.pendingVendorPayments.length === 0 ? (
+              <p className="text-sm text-slate-400">No pending vendor payments</p>
+            ) : (
+              stats.pendingVendorPayments.map((payment) => {
+                const overdue = new Date(payment.dueDate) < new Date();
+                return (
+                  <div key={payment._id} className={`rounded-xl border px-3 py-3 ${overdue ? "border-red-200 bg-red-50" : "border-slate-200 bg-white"}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-slate-700">{payment.vendorName}</p>
+                      <span className={`text-xs font-semibold ${overdue ? "text-red-600" : "text-slate-500"}`}>{overdue ? "Overdue" : "Due"}</span>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between text-sm text-slate-500">
+                      <span>{fmtMoney(payment.outstandingAmount)}</span>
+                      <span>{fmtDate(payment.dueDate)}</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <p className="text-sm font-semibold text-slate-700">Purchase Status</p>
+          <div className="mt-4 space-y-3">
+            <div className="rounded-xl border border-green-200 bg-green-50 p-3">
+              <p className="text-xs text-green-700">Paid Purchases</p>
+              <p className="text-xl font-semibold text-slate-800">{stats.purchaseSummary.paidPurchases}</p>
+            </div>
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-3">
+              <p className="text-xs text-blue-700">Partial Purchases</p>
+              <p className="text-xl font-semibold text-slate-800">{stats.purchaseSummary.partialPurchases}</p>
+            </div>
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+              <p className="text-xs text-amber-700">Pending Purchases</p>
+              <p className="text-xl font-semibold text-slate-800">{stats.purchaseSummary.pendingPurchases}</p>
             </div>
           </div>
-          {stats.salesTrend.length > 0 ? (
-            <SalesChart data={stats.salesTrend} />
+        </div>
+
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <p className="text-sm font-semibold text-slate-700">Top Vendors</p>
+            <Link to="/vendors" className="text-xs text-blue-600 hover:text-blue-700 font-medium">View all</Link>
+          </div>
+          {stats.topVendors.length === 0 ? (
+            <div className="px-5 py-10 text-center text-slate-300 text-sm">No vendor purchase data yet</div>
           ) : (
-            <div className="h-32 flex items-center justify-center text-slate-300 text-sm">
-              No sales data yet
+            <div className="divide-y divide-slate-100">
+              {stats.topVendors.map((vendor) => (
+                <div key={vendor._id} className="px-5 py-3.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium text-slate-700">{vendor.name}</p>
+                    <p className="text-sm font-semibold text-slate-800">{fmtMoney(vendor.totalPurchase)}</p>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
+                    <span>Outstanding</span>
+                    <span>{fmtMoney(vendor.outstanding)}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
       </div>
 
-      {/* ── Paid / Pending Summary ── */}
-      <div className="grid md:grid-cols-2 gap-6 mb-6">
-        <div className="bg-green-50 border border-green-200 rounded-2xl p-6 flex items-center justify-between">
-          <div>
-            <h3 className="text-green-700 font-semibold text-sm">Paid Invoices</h3>
-            <p className="text-4xl font-bold mt-2 text-slate-800">{stats.paidInvoices}</p>
-          </div>
-          <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xl">
-            ✓
-          </div>
-        </div>
-
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 flex items-center justify-between">
-          <div>
-            <h3 className="text-red-700 font-semibold text-sm">Pending / Partial</h3>
-            <p className="text-4xl font-bold mt-2 text-slate-800">{stats.pendingInvoices}</p>
-          </div>
-          <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-xl">
-            !
-          </div>
-        </div>
-      </div>
-
-      {/* ── Recent Invoices + Top Outstanding + Low Stock ── */}
-      <div className="grid lg:grid-cols-3 gap-6">
-
-        {/* Recent Invoices */}
+      <div className="grid lg:grid-cols-2 xl:grid-cols-4 gap-6">
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-700">Recent Invoices</p>
-            <Link to="/all-invoices" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
-              View all
-            </Link>
+            <Link to="/all-invoices" className="text-xs text-blue-600 hover:text-blue-700 font-medium">View all</Link>
           </div>
           {stats.recentInvoices.length === 0 ? (
             <div className="px-5 py-10 text-center text-slate-300 text-sm">No invoices yet</div>
           ) : (
             <div className="divide-y divide-slate-100">
               {stats.recentInvoices.map((inv) => (
-                <Link
-                  key={inv._id}
-                  to={`/invoice/${inv._id}`}
-                  className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 transition-colors"
-                >
+                <Link key={inv._id} to={`/invoice/${inv._id}`} className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 transition-colors">
                   <div>
                     <p className="text-sm font-medium text-slate-700">#{inv.invoiceNumber}</p>
                     <p className="text-xs text-slate-400 mt-0.5">{inv.customerName}</p>
@@ -369,24 +435,42 @@ function Dashboard() {
           )}
         </div>
 
-        {/* Top Outstanding Customers */}
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <p className="text-sm font-semibold text-slate-700">Recent Purchases</p>
+            <Link to="/purchases" className="text-xs text-blue-600 hover:text-blue-700 font-medium">View all</Link>
+          </div>
+          {stats.recentPurchases.length === 0 ? (
+            <div className="px-5 py-10 text-center text-slate-300 text-sm">No purchases yet</div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {stats.recentPurchases.map((purchase) => (
+                <div key={purchase._id} className="flex items-center justify-between px-5 py-3.5">
+                  <div>
+                    <p className="text-sm font-medium text-slate-700">{purchase.purchaseNumber}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{purchase.vendorName}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-slate-800">{fmtMoney(purchase.grandTotal)}</p>
+                    <div className="mt-1">{statusBadge(purchase.paymentStatus)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-700">Top Outstanding</p>
-            <Link to="/customers" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
-              View all
-            </Link>
+            <Link to="/customers" className="text-xs text-blue-600 hover:text-blue-700 font-medium">View all</Link>
           </div>
           {stats.topOutstandingCustomers.length === 0 ? (
             <div className="px-5 py-10 text-center text-slate-300 text-sm">All dues cleared 🎉</div>
           ) : (
             <div className="divide-y divide-slate-100">
               {stats.topOutstandingCustomers.map((c) => (
-                <Link
-                  key={c._id}
-                  to={`/customers/${c._id}/ledger`}
-                  className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 transition-colors"
-                >
+                <Link key={c._id} to={`/customers/${c._id}/ledger`} className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 transition-colors">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-full bg-red-50 text-red-500 text-xs font-bold flex items-center justify-center">
                       {c.name.slice(0, 2).toUpperCase()}
@@ -400,36 +484,36 @@ function Dashboard() {
           )}
         </div>
 
-        {/* Low Stock Alerts */}
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
               <FaExclamationTriangle className="text-amber-400 text-xs" />
               Low Stock Alerts
             </p>
-            <Link to="/stock" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
-              View all
-            </Link>
+            <Link to="/stock" className="text-xs text-blue-600 hover:text-blue-700 font-medium">View all</Link>
           </div>
           {stats.lowStockList.length === 0 ? (
             <div className="px-5 py-10 text-center text-slate-300 text-sm">Stock levels healthy ✓</div>
           ) : (
             <div className="divide-y divide-slate-100">
               {stats.lowStockList.map((p) => (
-                <div key={p._id} className="flex items-center justify-between px-5 py-3.5">
-                  <div>
-                    <p className="text-sm font-medium text-slate-700">{p.name}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">Threshold: {p.lowStockThreshold} {p.unit}</p>
+                <div key={p._id} className="px-5 py-3.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-medium text-slate-700">{p.name}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">Min: {p.lowStockThreshold} {p.unit}</p>
+                    </div>
+                    <span className={`text-sm font-bold ${p.stock <= 0 ? "text-red-600" : "text-amber-500"}`}>{p.stock} {p.unit}</span>
                   </div>
-                  <span className={`text-sm font-bold ${p.stock <= 0 ? "text-red-600" : "text-amber-500"}`}>
-                    {p.stock} {p.unit}
-                  </span>
+                  <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+                    <span>Reorder</span>
+                    <span>{p.suggestedReorderQty} {p.unit}</span>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
-
       </div>
     </div>
   );

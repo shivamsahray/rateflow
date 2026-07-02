@@ -383,6 +383,75 @@ function Layout() {
             }
 
           </NavLink>
+
+          <NavLink 
+            to="/vendors"
+            className={({ isActive }) => 
+              `flex items-center ${
+                sidebarOpen ? "justify-start" : "justify-center"
+              } gap-3 px-4 py-3 rounded-lg transition-all ${
+                isActive 
+                  ? "bg-blue-600 text-white font-semibold" : "hover:bg-blue-50"
+              }`
+          }>
+            <Users size={20} />
+
+            {sidebarOpen && (
+              <span>Vendors</span>
+            )}
+          </NavLink>
+
+          <NavLink 
+            to="/purchases"
+            className={({ isActive }) => 
+              `flex items-center ${
+                sidebarOpen ? "justify-start" : "justify-center"
+              } gap-3 px-4 py-3 rounded-lg transition-all ${
+                isActive 
+                  ? "bg-blue-600 text-white font-semibold" : "hover:bg-blue-50"
+              }`
+          }>
+            <FileText size={20} />
+
+            {sidebarOpen && (
+              <span>Purchases</span>
+            )}
+          </NavLink>
+
+          <NavLink 
+            to="/vendor-payments"
+            className={({ isActive }) => 
+              `flex items-center ${
+                sidebarOpen ? "justify-start" : "justify-center"
+              } gap-3 px-4 py-3 rounded-lg transition-all ${
+                isActive 
+                  ? "bg-blue-600 text-white font-semibold" : "hover:bg-blue-50"
+              }`
+          }>
+            <IndianRupee size={20} />
+
+            {sidebarOpen && (
+              <span>Vendor Payments</span>
+            )}
+          </NavLink>
+
+          <NavLink 
+            to="/purchase-reports"
+            className={({ isActive }) => 
+              `flex items-center ${
+                sidebarOpen ? "justify-start" : "justify-center"
+              } gap-3 px-4 py-3 rounded-lg transition-all ${
+                isActive 
+                  ? "bg-blue-600 text-white font-semibold" : "hover:bg-blue-50"
+              }`
+          }>
+            <FileText size={20} />
+
+            {sidebarOpen && (
+              <span>Purchase Reports</span>
+            )}
+          </NavLink>
+
           <NavLink 
             to="/settings"
             className={({ isActive }) => 

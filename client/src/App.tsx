@@ -35,6 +35,11 @@ const Stock = lazy(() => import("./pages/Stock"));
 const CustomerLedger = lazy(() => import("./pages/CustomerLedger"));
 const AdminPanel = lazy(() => import("./pages/AdminPanel"));
 const SubscriptionExpired = lazy(() => import("./pages/SubscriptionExpired"));
+const Vendors = lazy(() => import("./pages/Vendors"));
+const CreatePurchase = lazy(() => import("./pages/CreatePurchase"));
+const Purchases = lazy(() => import("./pages/Purchases"));
+const VendorPayments = lazy(() => import("./pages/VendorPayments"));
+const PurchaseReports = lazy(() => import("./pages/PurchaseReports"));
 
 function Loader() {
   return (
@@ -70,6 +75,11 @@ function App() {
           <Route path="/all-invoices"                      element={<Invoices />} />
           <Route path="/invoice/:id"                       element={<InvoiceDetails />} />
           <Route path="/stock"                             element={<Stock />} />
+          <Route path="/vendors"                           element={<Vendors />} />
+          <Route path="/purchases"                         element={<Purchases />} />
+          <Route path="/create-purchase"                   element={<CreatePurchase />} />
+          <Route path="/vendor-payments"                   element={<VendorPayments />} />
+          <Route path="/purchase-reports"                  element={<PurchaseReports />} />
           <Route path="/settings"                          element={<Settings />} />
           <Route path="/customers/:customerId/ledger"      element={<CustomerLedger />} />
         </Route>
