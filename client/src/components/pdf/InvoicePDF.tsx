@@ -3090,7 +3090,7 @@ const sA5 = StyleSheet.create({
   // ── Header: company (left) | invoice meta (right) ──
   headerRow:          { flexDirection: "row", borderBottom: 1, borderColor: BORDER },
   companySection:     { flex: 1, padding: 5, borderRight: 1, borderColor: BORDER },
-  companyName:        { fontSize: 9, fontFamily: "Helvetica-Bold", color: PRIMARY, marginBottom: 2 },
+  companyName:        { fontSize: 12, fontFamily: "Helvetica-Bold", color: PRIMARY, marginBottom: 2 },
   companyMeta:        { fontSize: 6, color: TEXT_MID, marginBottom: 1 },
   invoiceMetaSection: { width: 110, padding: 5 },
   metaRow:            { flexDirection: "row", marginBottom: 2 },
@@ -3101,7 +3101,7 @@ const sA5 = StyleSheet.create({
   // ── Bill To — compact single row strip ──
   billRow:        { flexDirection: "row", borderBottom: 1, borderColor: BORDER, padding: 4, alignItems: "center" },
   billLabel:      { fontFamily: "Helvetica-Bold", fontSize: 6, color: PRIMARY, marginRight: 5, width: 30 },
-  billName:       { fontFamily: "Helvetica-Bold", fontSize: 7, color: TEXT_DARK, marginRight: 8 },
+  billName:       { fontFamily: "Helvetica-Bold", fontSize: 10, color: TEXT_DARK, marginRight: 8 },
   billMeta:       { fontSize: 6, color: TEXT_MID, marginRight: 6 },
  
   // ── Items Table ──
@@ -3110,8 +3110,8 @@ const sA5 = StyleSheet.create({
   tableHeaderCell: { color: WHITE, fontFamily: "Helvetica-Bold", fontSize: 6, textAlign: "center" },
   tableRow:        { flexDirection: "row", paddingVertical: 2.5, paddingHorizontal: 4, borderBottom: 1, borderColor: "#F0D0CE" },
   tableRowAlt:     { backgroundColor: "#FEF6F5" },
-  tableCell:       { fontSize: 6, color: TEXT_DARK, textAlign: "center" },
-  tableCellLeft:   { fontSize: 6, color: TEXT_DARK, textAlign: "left" },
+  tableCell:       { fontSize: 8, color: TEXT_DARK, textAlign: "center" },
+  tableCellLeft:   { fontSize: 8, color: TEXT_DARK, textAlign: "left" },
  
   // Column widths — optimised for A5 width (~420pt)
   colSr:      { width: 16 },
