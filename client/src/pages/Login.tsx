@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "../services/authService";
+import { resendVerification } from "../services/authService";
 
 function Login() {
   const navigate = useNavigate();
   const [error, setError] = useState("");
+  const [showResend, setShowResend] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -35,12 +39,34 @@ function Login() {
 
     if (err.response?.status === 401) {
       setError("Invalid email or password");
+      setShowResend(false);
     } else {
-      setError("Something went wrong. Please try again.");
+      // If account not verified
+      if (err.response?.status === 403) {
+        setError(err.response?.data?.message || 'Please verify your email');
+        setShowResend(true);
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     }
 
     console.error(err);
   }
+  };
+
+  const handleResend = async () => {
+    setResendLoading(true);
+    setError('');
+    try {
+      await resendVerification({ email: formData.email });
+      setCooldown(60);
+      const timer = setInterval(() => setCooldown(c => {
+        if (c <= 1) { clearInterval(timer); return 0; }
+        return c - 1;
+      }), 1000);
+    } catch (e: any) {
+      setError(e.response?.data?.message || 'Could not resend OTP');
+    } finally { setResendLoading(false); }
   };
 
   return (
@@ -106,6 +132,22 @@ function Login() {
               {error && (
                 <div className="rounded-xl bg-red-500/10 border border-red-500/30 p-3 text-red-400 text-sm">
                   {error}
+                </div>
+              )}
+
+              <div className="mt-2 text-right">
+                <Link to="/forgot-password" className="text-sm text-cyan-300">Forgot Password?</Link>
+              </div>
+
+              {showResend && (
+                <div className="mt-4 space-y-3">
+                  <p className="text-sm text-slate-300">Didn't receive OTP?</p>
+                  <button disabled={resendLoading || cooldown>0} onClick={handleResend} className="mt-2 rounded-full bg-cyan-500/90 px-4 py-2 text-sm font-semibold text-slate-900">
+                    {resendLoading ? 'Sending...' : cooldown>0 ? `Resend in ${cooldown}s` : 'Resend Verification'}
+                  </button>
+                  <Link to="/verify-email" state={{ email: formData.email }} className="inline-flex items-center text-sm font-semibold text-cyan-300 hover:text-cyan-200">
+                    Verify email now
+                  </Link>
                 </div>
               )}
 

@@ -28,10 +28,8 @@ function Register() {
 
     try {
       const data = await registerUser(formData);
-
-      localStorage.setItem("token", data.token);
-      navigate("/dashboard");
-    } catch (error) {
+      navigate('/verify-email', { state: { email: formData.email, message: data.message } });
+    } catch (error: any) {
       console.error(error);
     }
   };
