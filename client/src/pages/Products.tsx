@@ -347,6 +347,8 @@
 
 import { useEffect, useState } from "react";
 import ProductForm from "../components/ProductForm";
+import EmptyState from "../components/ui/EmptyState";
+import TableSkeleton from "../components/ui/TableSkeleton";
 import {
   getProducts,
   createProduct,
@@ -556,6 +558,8 @@ function EditProductModal({ product, onClose, onSave }: EditProductModalProps) {
             )}
           </div>
 
+            
+
           {/* Footer */}
           <div className="flex items-center justify-end gap-3 border-t bg-white px-6 py-4">
             <button
@@ -595,14 +599,37 @@ function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [total, setTotal] = useState<number>(0);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const LIMIT = 15;
 
-  const fetchProducts = async () => {
-    const data = await getProducts();
-    setProducts(data);
+  const fetchProducts = async (p: number = page, q: string = searchTerm) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await getProducts({ page: p, limit: LIMIT, search: q });
+
+      // API returns { data, total, page, totalPages }
+      setProducts(Array.isArray(data.data) ? data.data : []);
+      setTotal(data.total ?? 0);
+      setTotalPages(data.totalPages ?? 1);
+      setPage(data.page ?? p);
+    } catch (err: any) {
+      setProducts([]);
+      setError(err?.response?.data?.message || "Unable to load products right now.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchProducts();
+    void fetchProducts(1, searchTerm);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCreate = async (productData: any) => {
@@ -641,17 +668,41 @@ function Products() {
 
       <div className="w-fill mx-auto px-8 py-8 space-y-8">
 
-        {/* Add button */}
-        <div className="flex justify-end">
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Product
-          </button>
+        {/* Search + Add button */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search products by name or SKU"
+              className="rounded-lg border border-slate-200 px-3 py-2.5 text-sm w-64"
+            />
+            <button
+              onClick={() => { setPage(1); void fetchProducts(1, searchTerm); }}
+              className="bg-slate-100 text-sm px-3 py-2 rounded-lg text-slate-700"
+            >
+              Search
+            </button>
+            <button
+              onClick={() => { setSearchTerm(""); setPage(1); void fetchProducts(1, ""); }}
+              className="bg-slate-50 text-sm px-3 py-2 rounded-lg text-slate-500 border border-slate-100"
+            >
+              Clear
+            </button>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Product
+            </button>
+          </div>
         </div>
 
         {/* Add Product Modal */}
@@ -680,15 +731,23 @@ function Products() {
         )}
 
         {/* Product List */}
-        {products.length === 0 ? (
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-6 py-16 text-center">
-            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
-              </svg>
-            </div>
-            <p className="text-slate-500 text-sm">No products yet. Add your first product above.</p>
-          </div>
+        {loading ? (
+          <TableSkeleton rows={5} columns={5} />
+        ) : error ? (
+          <EmptyState
+            title="We couldn't load products"
+            description={error}
+            actionLabel="Try again"
+            onAction={() => void fetchProducts()}
+            variant="error"
+          />
+        ) : products.length === 0 ? (
+          <EmptyState
+            title="No products yet"
+            description="Add your first product to start building your catalogue."
+            actionLabel="Add product"
+            onAction={() => setShowAddModal(true)}
+          />
         ) : (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100">
@@ -786,6 +845,35 @@ function Products() {
           onClose={() => setEditingProduct(null)}
           onSave={handleSaved}
         />
+      )}
+
+      {/* Pagination Controls */}
+      {total > 0 && (
+        <div className="max-w-5xl mx-auto px-8 py-4 flex items-center justify-between">
+          <div className="text-sm text-slate-500">
+            Showing {(page - 1) * LIMIT + 1} - {Math.min(page * LIMIT, total)} of {total} products
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { if (page > 1) { const np = page - 1; setPage(np); void fetchProducts(np, searchTerm); } }}
+              disabled={page <= 1}
+              className="px-3 py-2 rounded-lg border bg-white text-sm disabled:opacity-50"
+            >
+              Prev
+            </button>
+
+            <div className="text-sm text-slate-600 px-3">Page {page} of {totalPages}</div>
+
+            <button
+              onClick={() => { if (page < totalPages) { const np = page + 1; setPage(np); void fetchProducts(np, searchTerm); } }}
+              disabled={page >= totalPages}
+              className="px-3 py-2 rounded-lg border bg-white text-sm disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       )}
 
     </div>

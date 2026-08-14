@@ -48,6 +48,9 @@ const productSchema = new mongoose.Schema(
   }
 );
 
+// Add a text index on name and sku for faster search
+productSchema.index({ name: 'text', sku: 'text' });
+
 export default mongoose.model(
   "Product",
   productSchema

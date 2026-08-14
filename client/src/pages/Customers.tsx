@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CustomerForm from "../components/CustomerForm";
+import EmptyState from "../components/ui/EmptyState";
+import TableSkeleton from "../components/ui/TableSkeleton";
 import {
   getCustomers,
   createCustomer,
@@ -217,15 +219,27 @@ function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
  
   const fetchCustomers = async () => {
-    const data = await getCustomers();
-    setCustomers(data);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await getCustomers();
+      setCustomers(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      setCustomers([]);
+      setError(err?.response?.data?.message || "Unable to load customers right now.");
+    } finally {
+      setLoading(false);
+    }
   };
  
   useEffect(() => {
-    fetchCustomers();
+    void fetchCustomers();
   }, []);
  
   const handleCreate = async (customerData: any) => {
@@ -309,15 +323,23 @@ function Customers() {
         )}
  
         {/* Customer List */}
-        {customers.length === 0 ? (
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-6 py-16 text-center">
-            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-            <p className="text-slate-500 text-sm">No customers yet. Add your first one above.</p>
-          </div>
+        {loading ? (
+          <TableSkeleton rows={5} columns={4} />
+        ) : error ? (
+          <EmptyState
+            title="We couldn't load customers"
+            description={error}
+            actionLabel="Try again"
+            onAction={() => void fetchCustomers()}
+            variant="error"
+          />
+        ) : customers.length === 0 ? (
+          <EmptyState
+            title="No customers yet"
+            description="Add your first customer to start tracking balances and ledger activity."
+            actionLabel="Add customer"
+            onAction={() => setShowAddModal(true)}
+          />
         ) : (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100">

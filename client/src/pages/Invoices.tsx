@@ -160,6 +160,8 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import EmptyState from "../components/ui/EmptyState";
+import TableSkeleton from "../components/ui/TableSkeleton";
 import { getInvoices, updateInvoice, deleteInvoice } from "../services/invoiceService";
 import { getProducts } from "../services/productService";
 import { getLastPrice } from "../services/pricingService";
@@ -725,6 +727,7 @@ function DeleteDialog({ invoice, onClose, onConfirm, deleting }: DeleteDialogPro
 function Invoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [deletingInvoice, setDeletingInvoice] = useState<Invoice | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -738,21 +741,29 @@ function Invoices() {
   useEffect(() => {
     const loadInvoices = async () => {
       setLoading(true);
-      const data = await getInvoices(page, PAGE_SIZE);
+      setError(null);
 
-      // Backward compatible: agar service purana array hi de raha ho to bhi chal jaaye
-      if (Array.isArray(data)) {
-        setInvoices(data);
-        setTotalPages(1);
-        setTotalInvoices(data.length);
-      } else {
-        setInvoices(data.invoices);
-        setTotalPages(data.totalPages || 1);
-        setTotalInvoices(data.total || data.invoices.length);
+      try {
+        const data = await getInvoices(page, PAGE_SIZE);
+
+        // Backward compatible: agar service purana array hi de raha ho to bhi chal jaaye
+        if (Array.isArray(data)) {
+          setInvoices(data);
+          setTotalPages(1);
+          setTotalInvoices(data.length);
+        } else {
+          setInvoices(data.invoices || []);
+          setTotalPages(data.totalPages || 1);
+          setTotalInvoices(data.total || data.invoices?.length || 0);
+        }
+      } catch (err: any) {
+        setInvoices([]);
+        setError(err?.response?.data?.message || "Unable to load invoices right now.");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
-    loadInvoices();
+    void loadInvoices();
   }, [page]);
  
   const handleSaved = (updated: Invoice) => {
@@ -805,9 +816,20 @@ function Invoices() {
         {/* Table */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           {loading ? (
-            <div className="py-20 text-center text-sm text-slate-400">Loading invoices…</div>
+            <TableSkeleton rows={6} columns={5} />
+          ) : error ? (
+            <EmptyState
+              title="We couldn't load invoices"
+              description={error}
+              actionLabel="Try again"
+              onAction={() => window.location.reload()}
+              variant="error"
+            />
           ) : invoices.length === 0 ? (
-            <div className="py-20 text-center text-sm text-slate-400">No invoices found.</div>
+            <EmptyState
+              title="No invoices found"
+              description="Create your first invoice to see it appear here."
+            />
           ) : (
             <table className="w-full text-sm">
               <thead>

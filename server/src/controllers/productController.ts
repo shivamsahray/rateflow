@@ -29,12 +29,28 @@ export const getProducts = async (
   res: Response
 ) => {
   try {
-    const products =
-      await Product.find({
-        tenantId: req.user?.tenantId,
-      });
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.max(1, Number(req.query.limit) || 15);
+    const search = (req.query.search as string) || "";
 
-    res.status(200).json(products);
+    const filter: any = { tenantId: req.user?.tenantId };
+
+    if (search && search.trim().length > 0) {
+      // simple case-insensitive partial match on name or sku
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { sku: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      Product.find(filter).skip(skip).limit(limit).lean(),
+      Product.countDocuments(filter),
+    ]);
+
+    res.status(200).json({ data, total, page, totalPages: Math.ceil(total / limit) });
   } catch (error) {
   console.error("Create Product Error:", error);
 

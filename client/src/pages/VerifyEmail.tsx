@@ -8,7 +8,7 @@ export default function VerifyEmail() {
   const [form, setForm] = useState({ email: state.email || '', otp: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(state.message || '');
+  const [success] = useState(state.message || '');
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -172,6 +172,8 @@
 
 
 import { useEffect, useState } from "react";
+import EmptyState from "../components/ui/EmptyState";
+import PageSkeleton from "../components/ui/PageSkeleton";
 import { getCustomers } from "../services/customerService";
 import { getProducts } from "../services/productService";
 import { getLastPrice } from "../services/pricingService";
@@ -183,15 +185,27 @@ function PricingPlayground() {
   const [productId, setProductId] = useState("");
   const [priceData, setPriceData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
-      const customerData = await getCustomers();
-      const productData = await getProducts();
-      setCustomers(customerData);
-      setProducts(productData);
+      setPageLoading(true);
+      setError(null);
+
+      try {
+        const [customerData, productData] = await Promise.all([getCustomers(), getProducts()]);
+        setCustomers(Array.isArray(customerData) ? customerData : []);
+        setProducts(Array.isArray(productData) ? productData : []);
+      } catch (err: any) {
+        setCustomers([]);
+        setProducts([]);
+        setError(err?.response?.data?.message || "Unable to load pricing data right now.");
+      } finally {
+        setPageLoading(false);
+      }
     };
-    loadData();
+    void loadData();
   }, []);
 
   const handleCheck = async () => {
@@ -203,6 +217,32 @@ function PricingPlayground() {
 
   const selectedCustomer = customers.find((c) => c._id === customerId);
   const selectedProduct = products.find((p) => p._id === productId);
+
+  if (pageLoading) {
+    return <PageSkeleton title="Pricing Playground" subtitle="Loading customer and product data" rows={4} />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50 font-sans">
+        <div className="bg-white border-b border-slate-200 px-8 py-5">
+          <div className="w-full mx-auto">
+            <h1 className="text-xl font-semibold text-slate-800 tracking-tight">Pricing Playground</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Look up the last sold price for any customer–product combination</p>
+          </div>
+        </div>
+        <div className="w-full mx-auto px-8 py-8">
+          <EmptyState
+            title="We couldn't load pricing data"
+            description={error}
+            actionLabel="Try again"
+            onAction={() => window.location.reload()}
+            variant="error"
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">

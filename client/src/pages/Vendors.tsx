@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import EmptyState from "../components/ui/EmptyState";
+import TableSkeleton from "../components/ui/TableSkeleton";
 import { createVendor, deleteVendor, getVendors, updateVendor } from "../services/vendorService";
 
 type VendorForm = {
@@ -43,10 +45,22 @@ function Vendors() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadVendors = async () => {
-    const data = await getVendors();
-    setVendors(data);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await getVendors();
+      setVendors(Array.isArray(data) ? data : []);
+    } catch (err: any) {
+      setVendors([]);
+      setError(err?.response?.data?.message || "Unable to load vendors right now.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -141,42 +155,59 @@ function Vendors() {
             />
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="bg-slate-50 text-left text-slate-600">
-                  <th className="px-3 py-2">Vendor</th>
-                  <th className="px-3 py-2">Mobile</th>
-                  <th className="px-3 py-2">Outstanding</th>
-                  <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredVendors.map((vendor) => (
-                  <tr key={vendor._id} className="border-t">
-                    <td className="px-3 py-2">
-                      <div className="font-semibold text-slate-800">{vendor.name}</div>
-                      <div className="text-xs text-slate-500">{vendor.companyName || "—"}</div>
-                    </td>
-                    <td className="px-3 py-2">{vendor.mobile || "—"}</td>
-                    <td className="px-3 py-2">₹{Number(vendor.outstandingAmount || 0).toFixed(2)}</td>
-                    <td className="px-3 py-2">
-                      <span className={`rounded-full px-2 py-1 text-xs font-semibold ${vendor.status === "Active" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-                        {vendor.status || "Active"}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="flex gap-2">
-                        <button type="button" onClick={() => handleEdit(vendor)} className="rounded bg-blue-600 px-2 py-1 text-white">Edit</button>
-                        <button type="button" onClick={() => void handleDelete(vendor._id)} className="rounded bg-red-600 px-2 py-1 text-white">Delete</button>
-                      </div>
-                    </td>
+          {loading ? (
+            <TableSkeleton rows={5} columns={5} />
+          ) : error ? (
+            <EmptyState
+              title="We couldn't load vendors"
+              description={error}
+              actionLabel="Try again"
+              onAction={() => void loadVendors()}
+              variant="error"
+            />
+          ) : filteredVendors.length === 0 ? (
+            <EmptyState
+              title="No vendors yet"
+              description="Add your first vendor to start tracking purchases and outstanding balances."
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="bg-slate-50 text-left text-slate-600">
+                    <th className="px-3 py-2">Vendor</th>
+                    <th className="px-3 py-2">Mobile</th>
+                    <th className="px-3 py-2">Outstanding</th>
+                    <th className="px-3 py-2">Status</th>
+                    <th className="px-3 py-2">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredVendors.map((vendor) => (
+                    <tr key={vendor._id} className="border-t">
+                      <td className="px-3 py-2">
+                        <div className="font-semibold text-slate-800">{vendor.name}</div>
+                        <div className="text-xs text-slate-500">{vendor.companyName || "—"}</div>
+                      </td>
+                      <td className="px-3 py-2">{vendor.mobile || "—"}</td>
+                      <td className="px-3 py-2">₹{Number(vendor.outstandingAmount || 0).toFixed(2)}</td>
+                      <td className="px-3 py-2">
+                        <span className={`rounded-full px-2 py-1 text-xs font-semibold ${vendor.status === "Active" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                          {vendor.status || "Active"}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex gap-2">
+                          <button type="button" onClick={() => handleEdit(vendor)} className="rounded bg-blue-600 px-2 py-1 text-white">Edit</button>
+                          <button type="button" onClick={() => void handleDelete(vendor._id)} className="rounded bg-red-600 px-2 py-1 text-white">Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         <div className="rounded-2xl border bg-white p-4 shadow-sm">
