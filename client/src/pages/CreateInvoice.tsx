@@ -177,7 +177,7 @@ function CreateInvoice() {
         const productData = await getProducts();
 
         setCustomers(customerData);
-        setProducts(productData);
+        setProducts(productData.data);
       } catch (error) {
         console.error(error);
       }
