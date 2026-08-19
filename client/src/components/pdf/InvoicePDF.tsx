@@ -3150,6 +3150,14 @@ function InvoiceContentA4({ invoice }: { invoice: any }) {
       ? invoice.tenantId : {};
   const customer: any = invoice.customerId || {};
   const items: any[]  = invoice.items || [];
+  const customerOutstanding = (() => {
+    const rawValue =
+      typeof customer === "object" && customer !== null
+        ? customer.outstandingAmount ?? invoice?.outstandingAmount ?? 0
+        : invoice?.outstandingAmount ?? 0;
+    const numericValue = Number(rawValue ?? 0);
+    return Number.isFinite(numericValue) ? numericValue : 0;
+  })();
  
   const subtotal   = items.reduce((s, i) => s + i.quantity * i.price, 0);
   const gstTotal   = items.reduce((s, i) => s + (i.quantity * i.price * (i.gstPercent || 0)) / 100, 0);
@@ -3178,7 +3186,7 @@ function InvoiceContentA4({ invoice }: { invoice: any }) {
   return (
     <View style={s.outerBorder}>
       <View style={s.titleBanner}>
-        <Text style={s.titleText}>TAX INVOICE</Text>
+        <Text style={s.titleText}>DELIVERY CHALLAN</Text>
       </View>
  
       <View style={s.headerRow}>
@@ -3197,7 +3205,7 @@ function InvoiceContentA4({ invoice }: { invoice: any }) {
           <View style={s.metaRow}><Text style={s.metaLabel}>Date</Text><Text style={s.metaValue}>{invoiceDate}</Text></View>
           <View style={s.metaRow}><Text style={s.metaLabel}>Vehicle No.</Text><Text style={s.metaValue}>{invoice.vehicleNumber || "N/A"}</Text></View>
           <View style={s.metaRow}><Text style={s.metaLabel}>EWay Bill No.</Text><Text style={s.metaValue}>{invoice.eWayBillNumber || "N/A"}</Text></View>
-          <View style={s.metaRow}><Text style={s.metaLabel}>Amount Due</Text><Text style={s.metaValueBold}>Rs. {grandTotal.toFixed(2)}</Text></View>
+          <View style={s.metaRow}><Text style={s.metaLabel}>Party Due</Text><Text style={s.metaValueBold}>Rs. {customerOutstanding.toFixed(2)}</Text></View>
         </View>
       </View>
  
@@ -3308,6 +3316,14 @@ function InvoiceContentA5({ invoice }: { invoice: any }) {
       ? invoice.tenantId : {};
   const customer: any = invoice.customerId || {};
   const items: any[]  = invoice.items || [];
+  const customerOutstanding = (() => {
+    const rawValue =
+      typeof customer === "object" && customer !== null
+        ? customer.outstandingAmount ?? invoice?.outstandingAmount ?? 0
+        : invoice?.outstandingAmount ?? 0;
+    const numericValue = Number(rawValue ?? 0);
+    return Number.isFinite(numericValue) ? numericValue : 0;
+  })();
  
   const subtotal   = items.reduce((s, i) => s + i.quantity * i.price, 0);
   const gstTotal   = items.reduce((s, i) => s + (i.quantity * i.price * (i.gstPercent || 0)) / 100, 0);
@@ -3326,7 +3342,7 @@ function InvoiceContentA5({ invoice }: { invoice: any }) {
  
       {/* ── Title Banner ── */}
       <View style={sA5.titleBanner}>
-        <Text style={sA5.titleText}>TAX INVOICE</Text>
+        <Text style={sA5.titleText}>DELIVERY CHALLAN</Text>
       </View>
  
       {/* ── Header: Company | Invoice Meta ── */}
@@ -3354,8 +3370,8 @@ function InvoiceContentA5({ invoice }: { invoice: any }) {
             </View>
           )}
           <View style={sA5.metaRow}>
-            <Text style={sA5.metaLabel}>Amount Due</Text>
-            <Text style={sA5.metaValueBold}>Rs.{grandTotal.toFixed(2)}</Text>
+            <Text style={sA5.metaLabel}>Party Due</Text>
+            <Text style={sA5.metaValueBold}>Rs.{customerOutstanding.toFixed(2)}</Text>
           </View>
         </View>
       </View>

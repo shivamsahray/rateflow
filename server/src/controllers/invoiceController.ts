@@ -344,6 +344,7 @@ import { Response } from "express";
 
 import Invoice from "../models/Invoice";
 import PriceHistory from "../models/PriceHistory";
+import Payment from "../models/Payment";
 
 import { AuthRequest } from "../middleware/authMiddleware";
 import Tenant from "../models/Tenant";
@@ -353,6 +354,68 @@ import {
   sendWhatsAppMessage,
   buildInvoiceMessage,
 } from "../services/whatsappService";
+
+const getCustomerIdString = (customerId: any): string | null => {
+  if (!customerId) return null;
+
+  if (typeof customerId === "string") {
+    const trimmed = customerId.trim();
+    return trimmed && /^[0-9a-fA-F]{24}$/.test(trimmed) ? trimmed : null;
+  }
+
+  if (typeof customerId === "object") {
+    const nestedId = customerId._id;
+    if (nestedId && nestedId !== customerId) {
+      const nested = getCustomerIdString(nestedId);
+      if (nested) return nested;
+    }
+
+    const candidate = customerId.toString();
+    if (candidate && /^[0-9a-fA-F]{24}$/.test(candidate)) {
+      return candidate;
+    }
+  }
+
+  return null;
+};
+
+const recalculateCustomerOutstanding = async (
+  tenantId: string,
+  customerId: any
+) => {
+  const resolvedCustomerId = getCustomerIdString(customerId);
+  if (!resolvedCustomerId) return 0;
+
+  const customer = await Customer.findOne({ _id: resolvedCustomerId, tenantId });
+  if (!customer) return 0;
+
+  const [invoices, payments] = await Promise.all([
+    Invoice.find({ tenantId, customerId: resolvedCustomerId }).select("grandTotal paidAmount outstandingAmount"),
+    Payment.find({ tenantId, customerId: resolvedCustomerId }).select("amount discount"),
+  ]);
+
+  const totalInvoiced = invoices.reduce(
+    (sum, inv) => sum + Number(inv.grandTotal || 0),
+    0
+  );
+  const totalPaid = payments.reduce(
+    (sum, pay) => sum + Number(pay.amount || 0),
+    0
+  );
+  const totalDiscount = payments.reduce(
+    (sum, pay) => sum + Number(pay.discount || 0),
+    0
+  );
+
+  const outstanding =
+    Number(customer.openingBalance || 0) + totalInvoiced - totalPaid - totalDiscount;
+
+  await Customer.findByIdAndUpdate(resolvedCustomerId, {
+    outstandingAmount: outstanding,
+  });
+
+  return outstanding;
+};
 
 export const createInvoice = async (
   req: AuthRequest,
@@ -422,6 +485,8 @@ export const createInvoice = async (
 
     tenant!.invoiceCounter += 1;
     await tenant!.save();
+
+    await recalculateCustomerOutstanding(req.user?.tenantId as string, customerId);
 
     // ✅ WhatsApp: invoice create hone pe customer ko message bhejo
     if (tenant?.whatsappConnected && customerId) {
@@ -519,6 +584,23 @@ export const getInvoiceById = async (
       return res.status(404).json({ message: "Invoice not found" });
     }
 
+    if (invoice.customerId) {
+      const freshOutstanding = await recalculateCustomerOutstanding(
+        req.user?.tenantId as string,
+        invoice.customerId
+      );
+
+      const customerData =
+        typeof (invoice.customerId as any)?.toObject === "function"
+          ? (invoice.customerId as any).toObject()
+          : invoice.customerId;
+
+      (invoice as any).customerId = {
+        ...customerData,
+        outstandingAmount: freshOutstanding,
+      };
+    }
+
     return res.status(200).json(invoice);
   } catch (error) {
     console.error(error);
@@ -612,6 +694,8 @@ export const updateInvoice = async (req: AuthRequest, res: Response) => {
       .populate("customerId")
       .populate("items.productId");
 
+    await recalculateCustomerOutstanding(req.user?.tenantId as string, existing.customerId.toString());
+
     // ✅ WhatsApp: invoice update hone pe bhi message bhejo
     if (updated) {
       try {
@@ -671,6 +755,7 @@ export const deleteInvoice = async (req: AuthRequest, res: Response) => {
     }
 
     await invoice.deleteOne();
+    await recalculateCustomerOutstanding(req.user?.tenantId as string, invoice.customerId.toString());
 
     return res.status(200).json({ message: "Invoice deleted successfully" });
   } catch (error) {
