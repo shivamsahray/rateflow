@@ -174,7 +174,11 @@ function CreateInvoice() {
     const loadData = async () => {
       try {
         const customerData = await getCustomers();
-        const productData = await getProducts();
+        const productData = await getProducts({
+          page: 1,
+          limit: 1000,
+        }
+        );
 
         setCustomers(customerData);
         setProducts(productData.data);
