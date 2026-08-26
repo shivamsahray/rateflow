@@ -1652,6 +1652,7 @@ import {
   recordPayment,
   getPaymentsByInvoice,
 } from "../services/paymentService";
+import { toLocalDateInput } from "../utils/date";
  
 import {
  useRef
@@ -1698,7 +1699,12 @@ function InvoiceDetails() {
     notes,
     setNotes,
   ] = useState("");
- 
+
+  const [
+    paymentDate,
+    setPaymentDate,
+  ] = useState(() => toLocalDateInput(new Date()));
+
   // ✅ NEW: payment history state
   const [
     paymentHistory,
@@ -1820,6 +1826,7 @@ function InvoiceDetails() {
             invoice?._id,
           amount: enteredAmount,
           discount: enteredDiscount,
+          paymentDate,
           paymentMode,
           referenceNumber,
           notes,
@@ -1837,6 +1844,7 @@ function InvoiceDetails() {
         setOpenPaymentModal(false);
         setPaymentAmount("");
         setDiscountAmount("0");
+        setPaymentDate(toLocalDateInput(new Date()));
         setReferenceNumber("");
         setNotes("");
  
@@ -2334,7 +2342,8 @@ function InvoiceDetails() {
                     </label>
                     <input
                       type="date"
-                      defaultValue={new Date().toISOString().split("T")[0]}
+                      value={paymentDate}
+                      onChange={(e) => setPaymentDate(e.target.value)}
                       className="w-full rounded-md border p-2"
                     />
                   </div>

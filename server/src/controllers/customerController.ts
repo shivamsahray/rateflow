@@ -124,8 +124,6 @@ export const createCustomer = async (req: AuthRequest, res: Response) => {
       ...req.body,
       tenantId: req.user?.tenantId,
       openingBalance,
-      // ✅ Naya customer ka outstanding shuru mein = opening balance
-      // (aage invoices/payments isi mein add/subtract honge)
       outstandingAmount: openingBalance,
       openingBalanceDate: req.body.openingBalanceDate || new Date(),
     });
@@ -137,7 +135,26 @@ export const createCustomer = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getCustomers = async (req: AuthRequest, res: Response) => {
+const getCustomerListQuery = (tenantId: string, search?: string) => {
+  const baseFilter = { tenantId };
+  const query = typeof search === "string" ? search.trim() : "";
+
+  if (!query) {
+    return baseFilter;
+  }
+
+  return {
+    ...baseFilter,
+    $or: [
+      { name: { $regex: query, $options: "i" } },
+      { phone: { $regex: query, $options: "i" } },
+      { email: { $regex: query, $options: "i" } },
+      { gstNumber: { $regex: query, $options: "i" } },
+    ],
+  };
+};
+
+export const getAllCustomers = async (req: AuthRequest, res: Response) => {
   try {
     const customers = await Customer.find({
       tenantId: req.user?.tenantId,
@@ -150,10 +167,58 @@ export const getCustomers = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const searchCustomers = async (req: AuthRequest, res: Response) => {
+  try {
+    const searchTerm = typeof req.query.query === "string" ? req.query.query : "";
+    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
+    const filter = getCustomerListQuery(req.user?.tenantId as string, searchTerm);
+
+    const customers = await Customer.find(filter)
+      .sort({ isDefault: -1, name: 1 })
+      .limit(limit);
+
+    res.status(200).json(customers);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const getCustomers = async (req: AuthRequest, res: Response) => {
+  try {
+    const hasPaginationParams = req.query.page !== undefined || req.query.limit !== undefined || req.query.search !== undefined;
+    const tenantId = req.user?.tenantId as string;
+    const searchTerm = typeof req.query.search === "string" ? req.query.search : "";
+
+    if (hasPaginationParams) {
+      const page = Math.max(1, Number(req.query.page) || 1);
+      const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 25));
+      const filter = getCustomerListQuery(tenantId, searchTerm);
+      const total = await Customer.countDocuments(filter);
+      const customers = await Customer.find(filter)
+        .sort({ isDefault: -1, name: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+      return res.status(200).json({
+        data: customers,
+        page,
+        limit,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      });
+    }
+
+    const customers = await Customer.find({ tenantId }).sort({ isDefault: -1, name: 1 });
+    return res.status(200).json(customers);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 export const updateCustomer = async (req: AuthRequest, res: Response) => {
   try {
-    // ✅ Opening balance edit hone par outstandingAmount bhi recalculate karna padega
-    // (kyunki outstandingAmount = openingBalance + unpaid invoices - payments)
     const existing = await Customer.findOne({
       _id: req.params.id,
       tenantId: req.user?.tenantId,
@@ -173,7 +238,6 @@ export const updateCustomer = async (req: AuthRequest, res: Response) => {
       const newOpeningBalance = Number(updateData.openingBalance) || 0;
       const diff = newOpeningBalance - oldOpeningBalance;
 
-      // outstandingAmount ko bhi usi farak se adjust karo
       updateData.outstandingAmount = (existing.outstandingAmount || 0) + diff;
       updateData.openingBalance = newOpeningBalance;
     }

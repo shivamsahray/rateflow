@@ -43,6 +43,7 @@ const CreatePurchase = lazy(() => import("./pages/CreatePurchase"));
 const Purchases = lazy(() => import("./pages/Purchases"));
 const VendorPayments = lazy(() => import("./pages/VendorPayments"));
 const PurchaseReports = lazy(() => import("./pages/PurchaseReports"));
+const Payments = lazy(() => import("./pages/Payments"));
 
 function Loader() {
   return (
@@ -79,6 +80,7 @@ function App() {
           <Route path="/pricing"                           element={<PricingPlayground />} />
           <Route path="/invoices"                          element={<CreateInvoice />} />
           <Route path="/all-invoices"                      element={<Invoices />} />
+          <Route path="/payments"                          element={<Payments />} />
           <Route path="/invoice/:id"                       element={<InvoiceDetails />} />
           <Route path="/stock"                             element={<Stock />} />
           <Route path="/vendors"                           element={<Vendors />} />

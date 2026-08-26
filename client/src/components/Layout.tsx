@@ -366,6 +366,23 @@ function Layout() {
           </NavLink>
 
           <NavLink 
+            to="/payments"
+            className={({ isActive }) => 
+              `flex items-center ${
+                sidebarOpen ? "justify-start" : "justify-center"
+              } gap-3 px-4 py-3 rounded-lg transition-all ${
+                isActive 
+                  ? "bg-blue-600 text-white font-semibold" : "hover:bg-blue-50"
+              }`
+          }>
+            <IndianRupee size={20} />
+
+            {sidebarOpen && (
+              <span>Payments</span>
+            )}
+          </NavLink>
+
+          <NavLink 
             to="/stock"
             className={({ isActive }) => 
               `flex items-center ${

@@ -277,11 +277,30 @@ function EditModal({ invoice, onClose, onSave }: EditModalProps) {
  
   // Load products on mount
   useEffect(() => {
-    getProducts()
-      .then(setProducts)
-      .catch(() => console.error("Could not load products"));
+    const loadProducts = async () => {
+      try {
+        const response = await getProducts();
+
+        console.log("Products API response:", response);
+
+        if (Array.isArray(response)) {
+          setProducts(response);
+        } else if (Array.isArray(response?.products)) {
+          setProducts(response.products);
+        } else if (Array.isArray(response?.data)) {
+          setProducts(response.data);
+        } else {
+          console.error("Unexpected products response:", response);
+          setProducts([]);
+        }
+      } catch (error) {
+        console.error("Could not load products:", error);
+        setProducts([]);
+      }
+    };
+
+    loadProducts();
   }, []);
- 
   // ── Item helpers ──────────────────────────────────────────────────────────
  
   /** When user selects a product from dropdown — fetch last price (same logic as CreateInvoice) */

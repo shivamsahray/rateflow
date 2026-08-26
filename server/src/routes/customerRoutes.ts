@@ -38,16 +38,25 @@
 // export default router;
 
 import express from "express";
-import { createCustomer, getCustomers, updateCustomer, deleteCustomer } from "../controllers/customerController";
+import {
+  createCustomer,
+  getAllCustomers,
+  getCustomers,
+  searchCustomers,
+  updateCustomer,
+  deleteCustomer,
+} from "../controllers/customerController";
 import { authMiddleware, subscriptionMiddleware } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
 const auth = [authMiddleware, subscriptionMiddleware];
 
-router.post("/",    ...auth, createCustomer);
-router.get("/",     ...auth, getCustomers);
-router.put("/:id",  ...auth, updateCustomer);
+router.post("/", ...auth, createCustomer);
+router.get("/all", ...auth, getAllCustomers);
+router.get("/search", ...auth, searchCustomers);
+router.get("/", ...auth, getCustomers);
+router.put("/:id", ...auth, updateCustomer);
 router.delete("/:id", ...auth, deleteCustomer);
 
 export default router;

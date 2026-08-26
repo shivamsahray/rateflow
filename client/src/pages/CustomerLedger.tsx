@@ -1764,6 +1764,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../services/api";
+import { toLocalDateInput } from "../utils/date";
  
 // ─── Types ────────────────────────────────────────────────────────────────────
  
@@ -1823,6 +1824,7 @@ export default function CustomerLedger() {
   const [payAmount, setPayAmount]               = useState("");
   const [payDiscount, setPayDiscount]           = useState("0");
   const [payMode, setPayMode]                   = useState("Cash");
+  const [payDate, setPayDate]                   = useState(() => toLocalDateInput(new Date()));
   const [payRef, setPayRef]                     = useState("");
   const [payNotes, setPayNotes]                 = useState("");
   const [payLoading, setPayLoading]             = useState(false);
@@ -1879,6 +1881,7 @@ export default function CustomerLedger() {
       const res = await api.post(`/ledger/${customerId}/payment`, {
         amount:          Number(payAmount),
         discount:        Number(payDiscount) || 0,
+        paymentDate:     payDate,
         paymentMode:     payMode,
         referenceNumber: payRef,
         notes:           payNotes,
@@ -1889,6 +1892,7 @@ export default function CustomerLedger() {
       // Reset form
       setPayAmount("");
       setPayDiscount("0");
+      setPayDate(toLocalDateInput(new Date()));
       setPayRef("");
       setPayNotes("");
     } catch (err: any) {
@@ -2364,21 +2368,31 @@ export default function CustomerLedger() {
                 </div>
               </div>
  
-              {/* Payment Mode */}
-              <div>
-                <label className="text-xs font-medium text-slate-600 mb-1 block">Payment Mode</label>
-                <select
-                  value={payMode}
-                  onChange={(e) => setPayMode(e.target.value)}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
-                >
-                  <option>Cash</option>
-                  <option>UPI</option>
-                  <option>Bank Transfer</option>
-                  <option>Cheque</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-slate-600 mb-1 block">Payment Date</label>
+                  <input
+                    type="date"
+                    value={payDate}
+                    onChange={(e) => setPayDate(e.target.value)}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-600 mb-1 block">Payment Mode</label>
+                  <select
+                    value={payMode}
+                    onChange={(e) => setPayMode(e.target.value)}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
+                  >
+                    <option>Cash</option>
+                    <option>UPI</option>
+                    <option>Bank Transfer</option>
+                    <option>Cheque</option>
+                  </select>
+                </div>
               </div>
- 
+
               {/* Reference */}
               <div>
                 <label className="text-xs font-medium text-slate-600 mb-1 block">Reference No.</label>

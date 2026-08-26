@@ -269,6 +269,9 @@ function Dashboard() {
           <Link to="/customers" className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">
             <FaUserPlus className="text-xs" /> Add Customer
           </Link>
+          <Link to="/payments" className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">
+            <FaRupeeSign className="text-xs" /> Payments
+          </Link>
           <Link to="/purchases" className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2.5 rounded-xl transition-colors">
             <FaShoppingCart className="text-xs" /> New Purchase
           </Link>

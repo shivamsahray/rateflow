@@ -4,11 +4,9 @@ import Payment from "../models/Payment";
 import Customer from "../models/Customer";
 import Tenant from "../models/Tenant";
 import { AuthRequest } from "../middleware/authMiddleware";
-import {
-  sendWhatsAppMessage,
-} from "../services/whatsappService";
+import { sendWhatsAppMessage } from "../services/whatsappService";
+import { normalizePaymentDate } from "../utils/date";
 
-// ─── POST /api/ledger/:customerId/payment ─────────────────────────────────────
 // FIFO logic: opening balance > oldest unpaid invoice > next, etc.
 
 export const recordLedgerPayment = async (req: AuthRequest, res: Response) => {
@@ -23,11 +21,11 @@ export const recordLedgerPayment = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: "Customer ID is required" });
     }
 
-    const { amount, discount, paymentMode, referenceNumber, notes } = req.body;
+    const { amount, discount, paymentMode, referenceNumber, notes, paymentDate } = req.body;
 
-    const receivedAmount  = Number(amount)   || 0;
-    const discountAmount  = Number(discount) || 0;
-    let   remainingAmount = receivedAmount + discountAmount;
+    const receivedAmount = Number(amount) || 0;
+    const discountAmount = Number(discount) || 0;
+    let remainingAmount = receivedAmount + discountAmount;
 
     if (remainingAmount <= 0) {
       return res.status(400).json({ message: "Amount must be greater than 0" });
@@ -47,25 +45,22 @@ export const recordLedgerPayment = async (req: AuthRequest, res: Response) => {
 
     let openingBalanceSettled = 0;
 
-    // ✅ STEP 1: Opening balance pehle settle karo (sabse purana debt hai)
     const currentOpeningOutstanding = Math.max(
-      (customer.openingBalance || 0) -
-        (await getOpeningBalanceAlreadyPaid(tenantId, customerId)),
+      (customer.openingBalance || 0) - (await getOpeningBalanceAlreadyPaid(tenantId, customerId)),
       0
     );
 
     if (currentOpeningOutstanding > 0 && remainingAmount > 0) {
       const applyToOpening = Math.min(remainingAmount, currentOpeningOutstanding);
-      const cashApplied     = Math.min(receivedAmount, applyToOpening);
+      const cashApplied = Math.min(receivedAmount, applyToOpening);
       const discountApplied = applyToOpening - cashApplied;
 
-      // Opening balance settlement ko bhi Payment record mein save karo,
-      // invoiceId field ko omit karte hain — pehchanne ke liye notes mein flag karte hain
       await Payment.create({
         tenantId,
         customerId,
-        amount:    cashApplied,
-        discount:  discountApplied,
+        amount: cashApplied,
+        discount: discountApplied,
+        paymentDate: normalizePaymentDate(paymentDate) || new Date(),
         paymentMode,
         referenceNumber,
         notes: "OPENING_BALANCE_SETTLEMENT" + (notes ? ` — ${notes}` : ""),
@@ -75,7 +70,6 @@ export const recordLedgerPayment = async (req: AuthRequest, res: Response) => {
       remainingAmount -= applyToOpening;
     }
 
-    // ✅ STEP 2: Baaki amount se oldest unpaid invoices FIFO mein settle karo
     const pendingInvoices = await Invoice.find({
       tenantId,
       customerId,
@@ -88,38 +82,38 @@ export const recordLedgerPayment = async (req: AuthRequest, res: Response) => {
       const invoiceOutstanding = invoice.outstandingAmount || 0;
       if (invoiceOutstanding <= 0) continue;
 
-      const applyAmount     = Math.min(remainingAmount, invoiceOutstanding);
-      const cashApplied     = Math.min(receivedAmount, applyAmount);
+      const applyAmount = Math.min(remainingAmount, invoiceOutstanding);
+      const cashApplied = Math.min(receivedAmount, applyAmount);
       const discountApplied = applyAmount - cashApplied;
 
       await Payment.create({
         tenantId,
         customerId,
         invoiceId: invoice._id,
-        amount:    cashApplied,
-        discount:  discountApplied,
+        amount: cashApplied,
+        discount: discountApplied,
+        paymentDate: normalizePaymentDate(paymentDate) || new Date(),
         paymentMode,
         referenceNumber,
         notes: notes || "Ledger payment — distributed",
       });
 
-      invoice.paidAmount        = (invoice.paidAmount || 0) + cashApplied;
+      invoice.paidAmount = (invoice.paidAmount || 0) + cashApplied;
       invoice.outstandingAmount = Math.max(invoiceOutstanding - applyAmount, 0);
-      invoice.paymentStatus     = invoice.outstandingAmount <= 0 ? "Paid" : "Partial";
+      invoice.paymentStatus = invoice.outstandingAmount <= 0 ? "Paid" : "Partial";
 
       await invoice.save();
 
       settledInvoices.push({
-        invoiceNumber:   invoice.invoiceNumber,
-        amountApplied:   applyAmount,
+        invoiceNumber: invoice.invoiceNumber,
+        amountApplied: applyAmount,
         discountApplied,
-        newStatus:       invoice.paymentStatus,
+        newStatus: invoice.paymentStatus,
       });
 
       remainingAmount -= applyAmount;
     }
 
-    // ── Recalculate customer's total outstanding ─────────────────────────────
     const recalcInvoices = await Invoice.find({
       tenantId,
       customerId,
@@ -130,8 +124,7 @@ export const recordLedgerPayment = async (req: AuthRequest, res: Response) => {
     );
 
     const remainingOpeningBalance = Math.max(
-      (customer.openingBalance || 0) -
-        (await getOpeningBalanceAlreadyPaid(tenantId, customerId)),
+      (customer.openingBalance || 0) - (await getOpeningBalanceAlreadyPaid(tenantId, customerId)),
       0
     );
 
@@ -141,7 +134,6 @@ export const recordLedgerPayment = async (req: AuthRequest, res: Response) => {
       outstandingAmount: newOutstanding,
     });
 
-    // ── WhatsApp notification ─────────────────────────────────────────────────
     try {
       const tenant = await Tenant.findById(tenantId);
       if (tenant?.whatsappConnected && customer.phone && !customer.isDefault) {
@@ -185,13 +177,7 @@ export const recordLedgerPayment = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// ─── Helper: Opening balance ka kitna hissa already settle ho chuka hai ──────
-// Payment records mein "OPENING_BALANCE_SETTLEMENT" tag wale records dhundo
-
-async function getOpeningBalanceAlreadyPaid(
-  tenantId: string,
-  customerId: string
-): Promise<number> {
+async function getOpeningBalanceAlreadyPaid(tenantId: string, customerId: string): Promise<number> {
   const settlements = await Payment.find({
     tenantId,
     customerId,

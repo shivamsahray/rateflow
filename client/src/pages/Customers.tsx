@@ -221,15 +221,24 @@ function Customers() {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
  
-  const fetchCustomers = async () => {
+  const fetchCustomers = async (nextPage = page, query = search) => {
     setLoading(true);
     setError(null);
 
     try {
-      const data = await getCustomers();
-      setCustomers(Array.isArray(data) ? data : []);
+      const data = await getCustomers({ page: nextPage, limit: 10, search: query });
+      if (Array.isArray(data)) {
+        setCustomers(data);
+        setTotalPages(1);
+      } else {
+        setCustomers(Array.isArray(data.data) ? data.data : []);
+        setTotalPages(data.totalPages || 1);
+      }
     } catch (err: any) {
       setCustomers([]);
       setError(err?.response?.data?.message || "Unable to load customers right now.");
@@ -240,7 +249,7 @@ function Customers() {
  
   useEffect(() => {
     void fetchCustomers();
-  }, []);
+  }, [page, search]);
  
   const handleCreate = async (customerData: any) => {
     await createCustomer(customerData);
@@ -285,7 +294,19 @@ function Customers() {
       <div className="w-full mx-auto px-8 py-8 space-y-8">
  
         {/* Add button */}
-        <div className="flex justify-end">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="w-full max-w-md">
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Search customers"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none ring-0 focus:border-blue-500"
+            />
+          </div>
           <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-colors"
@@ -436,6 +457,28 @@ function Customers() {
                 </div>
               ))}
             </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 border-t border-slate-100 px-6 py-4">
+                <button
+                  type="button"
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  disabled={page === 1}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Previous
+                </button>
+                <span className="text-sm text-slate-600">Page {page} of {totalPages}</span>
+                <button
+                  type="button"
+                  onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                  disabled={page === totalPages}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
