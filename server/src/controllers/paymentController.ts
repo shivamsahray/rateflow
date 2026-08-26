@@ -148,6 +148,7 @@ export const recordPayment = async (req: AuthRequest, res: Response) => {
   try {
     const {
       invoiceId,
+      customerId,
       amount,
       discount,
       paymentMode,
@@ -156,19 +157,7 @@ export const recordPayment = async (req: AuthRequest, res: Response) => {
       paymentDate,
     } = req.body;
 
-    if (!invoiceId) {
-      return res.status(400).json({ message: "Invoice ID is required" });
-    }
-
-    const invoice = await Invoice.findOne({
-      _id: invoiceId,
-      tenantId: req.user?.tenantId,
-    });
-
-    if (!invoice) {
-      return res.status(404).json({ message: "Invoice not found" });
-    }
-
+    const tenantId = req.user?.tenantId as string;
     const discountAmount = Number(discount) || 0;
     const receivedAmount = Number(amount) || 0;
 
@@ -176,10 +165,35 @@ export const recordPayment = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: "Payment amount must be greater than 0" });
     }
 
+    let resolvedCustomerId = customerId || null;
+    let resolvedInvoiceId = invoiceId || null;
+
+    if (!resolvedInvoiceId && !resolvedCustomerId) {
+      return res.status(400).json({ message: "Customer or invoice is required" });
+    }
+
+    if (resolvedInvoiceId) {
+      const invoice = await Invoice.findOne({
+        _id: resolvedInvoiceId,
+        tenantId,
+      });
+
+      if (!invoice) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+
+      resolvedCustomerId = invoice.customerId.toString();
+    } else {
+      const customer = await Customer.findOne({ _id: resolvedCustomerId, tenantId });
+      if (!customer) {
+        return res.status(404).json({ message: "Customer not found" });
+      }
+    }
+
     const payment = await Payment.create({
-      tenantId: req.user?.tenantId,
-      customerId: invoice.customerId,
-      invoiceId,
+      tenantId,
+      customerId: resolvedCustomerId,
+      invoiceId: resolvedInvoiceId,
       amount: receivedAmount,
       discount: discountAmount,
       paymentDate: normalizePaymentDate(paymentDate) || new Date(),
@@ -188,32 +202,36 @@ export const recordPayment = async (req: AuthRequest, res: Response) => {
       notes,
     });
 
-    await recalculateInvoiceTotals(req.user?.tenantId as string, invoiceId);
-    await recalculateCustomerOutstanding(req.user?.tenantId as string, invoice.customerId.toString());
+    if (resolvedInvoiceId) {
+      await recalculateInvoiceTotals(tenantId, resolvedInvoiceId.toString());
+    }
 
-    try {
-      const tenant = await Tenant.findById(req.user?.tenantId);
-      if (tenant?.whatsappConnected) {
-        const customer = await Customer.findById(invoice.customerId);
-        if (customer?.phone && !customer.isDefault) {
-          const message = buildPaymentReceivedMessage(
-            tenant.companyName,
-            customer.name,
-            invoice.invoiceNumber,
-            receivedAmount,
-            invoice.outstandingAmount,
-            paymentMode
-          );
+    if (resolvedCustomerId) {
+      await recalculateCustomerOutstanding(tenantId, resolvedCustomerId.toString());
+    }
 
-          await sendWhatsAppMessage(
-            req.user?.tenantId as string,
-            customer.phone,
-            message
-          );
+    if (resolvedInvoiceId) {
+      try {
+        const tenant = await Tenant.findById(tenantId);
+        const invoice = await Invoice.findById(resolvedInvoiceId);
+        if (tenant?.whatsappConnected) {
+          const customer = await Customer.findById(resolvedCustomerId);
+          if (customer?.phone && !customer.isDefault && invoice) {
+            const message = buildPaymentReceivedMessage(
+              tenant.companyName,
+              customer.name,
+              invoice.invoiceNumber,
+              receivedAmount,
+              invoice.outstandingAmount,
+              paymentMode
+            );
+
+            await sendWhatsAppMessage(tenantId, customer.phone, message);
+          }
         }
+      } catch (waError) {
+        console.error("WhatsApp payment notification failed:", waError);
       }
-    } catch (waError) {
-      console.error("WhatsApp payment notification failed:", waError);
     }
 
     res.status(201).json(payment);

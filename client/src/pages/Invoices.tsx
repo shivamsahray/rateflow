@@ -160,6 +160,7 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import Select, { components } from "react-select";
 import EmptyState from "../components/ui/EmptyState";
 import TableSkeleton from "../components/ui/TableSkeleton";
 import { getInvoices, updateInvoice, deleteInvoice } from "../services/invoiceService";
@@ -171,8 +172,12 @@ import { getLastPrice } from "../services/pricingService";
 interface Product {
   _id: string;
   name: string;
+  sku?: string;
+  unit?: string;
   defaultPrice: number;
   gstPercent: number;
+  stock?: number;
+  lowStockThreshold?: number;
 }
  
 interface InvoiceItem {
@@ -182,7 +187,39 @@ interface InvoiceItem {
   gstPercent: number;
   amount: number;
 }
- 
+
+const ProductSingleValue = (props: any) => (
+  <components.SingleValue {...props}>
+    <div className="flex w-full items-center justify-between">
+      <span className="font-medium text-slate-700">{props.data.label}</span>
+      <span className="ml-3 text-xs text-slate-500">₹{props.data.price}{props.data.unit ? ` / ${props.data.unit}` : ""}</span>
+    </div>
+  </components.SingleValue>
+);
+
+const ProductOption = (props: any) => (
+  <components.Option {...props}>
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <div className="font-medium text-slate-800">{props.data.label}</div>
+        <div className="mt-1 text-xs text-slate-500">SKU: {props.data.sku || "-"}</div>
+      </div>
+      <div className="text-right">
+        <div className="font-semibold text-blue-600">₹{props.data.price}{props.data.unit ? ` / ${props.data.unit}` : ""}</div>
+        <div className="mt-1">
+          {(props.data.stock ?? 0) <= 0 ? (
+            <span className="rounded bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">Out of stock</span>
+          ) : (props.data.stock ?? 0) <= (props.data.lowStockThreshold ?? 10) ? (
+            <span className="rounded bg-yellow-100 px-2 py-0.5 text-[10px] font-semibold text-yellow-700">Low stock: {props.data.stock}</span>
+          ) : (
+            <span className="rounded bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700">Stock: {props.data.stock}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  </components.Option>
+);
+
 interface Invoice {
   _id: string;
   invoiceNumber: string;
@@ -265,6 +302,17 @@ function EditModal({ invoice, onClose, onSave }: EditModalProps) {
  
   // Products list for dropdown
   const [products, setProducts] = useState<Product[]>([]);
+  const productOptions = products.map((product) => ({
+    value: product._id,
+    label: product.name,
+    sku: product.sku,
+    unit: product.unit,
+    stock: product.stock,
+    price: product.defaultPrice,
+    gstPercent: product.gstPercent,
+    lowStockThreshold: product.lowStockThreshold,
+    product,
+  }));
  
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -279,27 +327,24 @@ function EditModal({ invoice, onClose, onSave }: EditModalProps) {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const response = await getProducts();
+        const response = await getProducts({ page: 1, limit: 1000 });
 
-        console.log("Products API response:", response);
+        const nextProducts = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.products)
+            ? response.products
+            : Array.isArray(response?.data)
+              ? response.data
+              : [];
 
-        if (Array.isArray(response)) {
-          setProducts(response);
-        } else if (Array.isArray(response?.products)) {
-          setProducts(response.products);
-        } else if (Array.isArray(response?.data)) {
-          setProducts(response.data);
-        } else {
-          console.error("Unexpected products response:", response);
-          setProducts([]);
-        }
+        setProducts(nextProducts);
       } catch (error) {
         console.error("Could not load products:", error);
         setProducts([]);
       }
     };
 
-    loadProducts();
+    void loadProducts();
   }, []);
   // ── Item helpers ──────────────────────────────────────────────────────────
  
@@ -426,9 +471,10 @@ function EditModal({ invoice, onClose, onSave }: EditModalProps) {
         onClick={onClose}
       />
  
-      {/* Side panel */}
-      <div className="fixed inset-y-0 right-0 z-50 flex w-full  flex-col bg-white shadow-2xl">
- 
+      {/* Full-screen modal overlay */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[1px]">
+        <div className="flex h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+
         {/* ── Header ── */}
         <div className="flex items-center justify-between border-b bg-slate-900 px-6 py-4">
           <div>
@@ -548,22 +594,40 @@ function EditModal({ invoice, onClose, onSave }: EditModalProps) {
  
                         {/* Product Dropdown */}
                         <td className="px-3 py-2">
-                          <select
+                          <Select
+                            options={productOptions}
                             value={
-                              typeof item.productId === "object"
-                                ? (item.productId as { _id: string })._id
-                                : item.productId
+                              productOptions.find(
+                                (option) =>
+                                  option.value ===
+                                  (typeof item.productId === "object"
+                                    ? (item.productId as { _id: string })._id
+                                    : item.productId)
+                              ) || null
                             }
-                            onChange={(e) => handleProductSelect(idx, e.target.value)}
-                            className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-200"
-                          >
-                            <option value="">Select Product</option>
-                            {products.map((p) => (
-                              <option key={p._id} value={p._id}>
-                                {p.name}
-                              </option>
-                            ))}
-                          </select>
+                            onChange={(option) => handleProductSelect(idx, option?.value || "")}
+                            isSearchable
+                            isClearable
+                            placeholder="Select Product"
+                            menuPortalTarget={document.body}
+                            className="text-sm"
+                            classNamePrefix="invoice-product"
+                            components={{ Option: ProductOption, SingleValue: ProductSingleValue }}
+                            styles={{
+                              control: (base) => ({
+                                ...base,
+                                minHeight: 38,
+                                borderColor: "#e2e8f0",
+                                boxShadow: "none",
+                                borderRadius: 8,
+                                "&:hover": { borderColor: "#cbd5e1" },
+                              }),
+                              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                              menu: (base) => ({ ...base, zIndex: 9999, borderRadius: 10 }),
+                              valueContainer: (base) => ({ ...base, padding: "0 10px" }),
+                              indicatorsContainer: (base) => ({ ...base, paddingRight: 6 }),
+                            }}
+                          />
                         </td>
  
                         {/* Qty */}
@@ -683,7 +747,8 @@ function EditModal({ invoice, onClose, onSave }: EditModalProps) {
             )}
           </button>
         </div>
- 
+
+        </div>
       </div>
     </>
   );

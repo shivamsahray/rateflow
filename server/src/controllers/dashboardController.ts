@@ -3,6 +3,7 @@ import Customer from "../models/Customer";
 import Product from "../models/Product";
 import Invoice from "../models/Invoice";
 import Purchase from "../models/Purchase";
+import Payment from "../models/Payment";
 import Vendor from "../models/Vendor";
 import { Response } from "express";
 import { AuthRequest } from "../middleware/authMiddleware";
@@ -30,6 +31,96 @@ const buildTrendSeries = (items: Array<{ _id: string; amount: number }>, days = 
   return Array.from(map.entries()).map(([date, amount]) => ({ date, amount: Math.round(amount * 100) / 100 }));
 };
 
+const parseLocalDate = (value?: string) => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const [year, month, day] = trimmed.split("-").map(Number);
+  if (![year, month, day].every((part) => Number.isFinite(part))) {
+    return null;
+  }
+
+  const date = new Date(year, month - 1, day);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const resolveSalesWindow = (period: string, fromDate?: string, toDate?: string) => {
+  const now = new Date();
+  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
+  const base = {
+    period,
+    start: startOfToday,
+    end: endOfToday,
+  };
+
+  if (period === "custom") {
+    const from = parseLocalDate(fromDate) || startOfToday;
+    const to = parseLocalDate(toDate) || endOfToday;
+    return {
+      period: "custom",
+      start: new Date(from.getFullYear(), from.getMonth(), from.getDate(), 0, 0, 0, 0),
+      end: new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23, 59, 59, 999),
+    };
+  }
+
+  if (period === "week") {
+    const start = new Date(now);
+    const day = start.getDay();
+    const diff = (day === 0 ? -6 : 1) - day;
+    start.setDate(start.getDate() + diff);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+
+    return { period: "week", start, end };
+  }
+
+  if (period === "lastMonth") {
+    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
+    const end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    return { period: "lastMonth", start, end };
+  }
+
+  if (period === "last3Months") {
+    const start = new Date(now.getFullYear(), now.getMonth() - 2, 1, 0, 0, 0, 0);
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    return { period: "last3Months", start, end };
+  }
+
+  if (period === "last6Months") {
+    const start = new Date(now.getFullYear(), now.getMonth() - 5, 1, 0, 0, 0, 0);
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    return { period: "last6Months", start, end };
+  }
+
+  if (period === "year") {
+    const start = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+    const end = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+    return { period: "year", start, end };
+  }
+
+  if (period === "month") {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    return { period: "month", start, end };
+  }
+
+  if (period === "today") {
+    return base;
+  }
+
+  return {
+    period: "month",
+    start: new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0),
+    end: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999),
+  };
+};
+
 export const getDashboardStats = async (req: AuthRequest, res: Response) => {
   const tenantId = req.user?.tenantId;
 
@@ -39,6 +130,10 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
 
   const filter = { tenantId };
   const tenantObjectId = new mongoose.Types.ObjectId(String(tenantId));
+  const period = String(req.query.period || "month");
+  const fromDate = typeof req.query.from === "string" ? req.query.from : undefined;
+  const toDate = typeof req.query.to === "string" ? req.query.to : undefined;
+  const salesWindow = resolveSalesWindow(period, fromDate, toDate);
   const now = new Date();
   const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -203,6 +298,27 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     14
   );
 
+  const salesOverviewInvoices = await Invoice.find({
+    tenantId,
+    invoiceDate: { $gte: salesWindow.start, $lte: salesWindow.end },
+  }).select("grandTotal paidAmount outstandingAmount invoiceNumber");
+
+  const salesOverviewPayments = await Payment.find({
+    tenantId,
+    paymentDate: { $gte: salesWindow.start, $lte: salesWindow.end },
+  }).select("amount discount");
+
+  const salesOverview = {
+    period: salesWindow.period,
+    start: salesWindow.start.toISOString(),
+    end: salesWindow.end.toISOString(),
+    totalSales: salesOverviewInvoices.reduce((sum, invoice) => sum + Number(invoice.grandTotal || 0), 0),
+    invoiceCount: salesOverviewInvoices.length,
+    paidAmount: salesOverviewPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0),
+    outstandingAmount: salesOverviewInvoices.reduce((sum, invoice) => sum + Number(invoice.outstandingAmount || 0), 0),
+    discount: salesOverviewPayments.reduce((sum, payment) => sum + Number(payment.discount || 0), 0),
+  };
+
   const recentInvoices = invoices.slice(0, 5).map((inv) => ({
     _id: inv._id,
     invoiceNumber: inv.invoiceNumber,
@@ -279,5 +395,6 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     })),
     pendingVendorPayments: pendingPayments,
     topVendors: topVendorList,
+    salesOverview,
   });
 };

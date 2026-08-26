@@ -82,6 +82,17 @@ interface PurchaseSummary {
   netBusiness: number;
 }
 
+interface SalesOverview {
+  period: string;
+  totalSales: number;
+  invoiceCount: number;
+  paidAmount: number;
+  outstandingAmount: number;
+  discount: number;
+  start: string;
+  end: string;
+}
+
 interface DashboardStats {
   totalCustomers: number;
   totalProducts: number;
@@ -105,6 +116,7 @@ interface DashboardStats {
   lowStockList: LowStockItem[];
   pendingVendorPayments: PendingVendorPayment[];
   topVendors: TopVendor[];
+  salesOverview: SalesOverview;
 }
 
 const EMPTY_STATS: DashboardStats = {
@@ -139,6 +151,16 @@ const EMPTY_STATS: DashboardStats = {
   lowStockList: [],
   pendingVendorPayments: [],
   topVendors: [],
+  salesOverview: {
+    period: "month",
+    totalSales: 0,
+    invoiceCount: 0,
+    paidAmount: 0,
+    outstandingAmount: 0,
+    discount: 0,
+    start: "",
+    end: "",
+  },
 };
 
 function fmtMoney(n: number) {
@@ -233,18 +255,29 @@ function statusBadge(status: string) {
 function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>(EMPTY_STATS);
   const [_loading, setLoading] = useState(true);
+  const [salesPeriod, setSalesPeriod] = useState("month");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
 
   useEffect(() => {
     void fetchDashboard();
-  }, []);
+  }, [salesPeriod, customFrom, customTo]);
 
   const fetchDashboard = async () => {
     try {
       const token = localStorage.getItem("token");
+      const params: Record<string, string> = { period: salesPeriod };
+
+      if (salesPeriod === "custom") {
+        if (customFrom) params.from = customFrom;
+        if (customTo) params.to = customTo;
+      }
+
       const res = await axios.get(`${API_URL}/dashboard/stats`, {
         headers: { Authorization: `Bearer ${token}` },
+        params,
       });
-      setStats({ ...EMPTY_STATS, ...res.data });
+      setStats({ ...EMPTY_STATS, ...res.data, salesOverview: res.data.salesOverview || EMPTY_STATS.salesOverview });
     } catch (error) {
       console.error(error);
     } finally {
@@ -253,6 +286,7 @@ function Dashboard() {
   };
 
   const isGrowthPositive = stats.revenueGrowth >= 0;
+  const overview = stats.salesOverview || EMPTY_STATS.salesOverview;
 
   return (
     <div className="w-full px-8 py-8 sm:p-8">
@@ -335,6 +369,72 @@ function Dashboard() {
               </div>
             </div>
             <TrendChart data={stats.purchaseTrend} barClass="bg-amber-400" emptyText="No purchase data yet" />
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-700">Sales Overview</p>
+            <p className="text-xs text-slate-400 mt-0.5">{overview.start ? new Date(overview.start).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"} to {overview.end ? new Date(overview.end).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <select
+              value={salesPeriod}
+              onChange={(e) => setSalesPeriod(e.target.value)}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500"
+            >
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="lastMonth">Last Month</option>
+              <option value="last3Months">Last 3 Months</option>
+              <option value="last6Months">Last 6 Months</option>
+              <option value="year">This Year</option>
+              <option value="custom">Custom Date Range</option>
+            </select>
+
+            {salesPeriod === "custom" && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={customFrom}
+                  onChange={(e) => setCustomFrom(e.target.value)}
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500"
+                />
+                <input
+                  type="date"
+                  value={customTo}
+                  onChange={(e) => setCustomTo(e.target.value)}
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-500"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs uppercase tracking-[0.15em] text-slate-400">Total Sales</p>
+            <p className="mt-2 text-2xl font-bold text-slate-800">{fmtMoney(overview.totalSales)}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs uppercase tracking-[0.15em] text-slate-400">Invoices</p>
+            <p className="mt-2 text-2xl font-bold text-slate-800">{overview.invoiceCount}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs uppercase tracking-[0.15em] text-slate-400">Received</p>
+            <p className="mt-2 text-2xl font-bold text-green-600">{fmtMoney(overview.paidAmount)}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs uppercase tracking-[0.15em] text-slate-400">Outstanding</p>
+            <p className="mt-2 text-2xl font-bold text-red-600">{fmtMoney(overview.outstandingAmount)}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs uppercase tracking-[0.15em] text-slate-400">Discount</p>
+            <p className="mt-2 text-2xl font-bold text-amber-600">{fmtMoney(overview.discount)}</p>
           </div>
         </div>
       </div>
