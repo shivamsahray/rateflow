@@ -189,6 +189,8 @@ export const recordPayment = async (req: AuthRequest, res: Response) => {
         return res.status(404).json({ message: "Customer not found" });
       }
     }
+    console.log("Payment date received from frontend:", paymentDate);
+    console.log("Normalized payment date:", normalizePaymentDate(paymentDate));
 
     const payment = await Payment.create({
       tenantId,

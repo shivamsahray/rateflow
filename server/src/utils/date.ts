@@ -1,24 +1,16 @@
-export const normalizePaymentDate = (value: unknown): Date | undefined => {
-  if (!value) return undefined;
+export const normalizePaymentDate = (value?: string | Date | null) => {
+  if (!value) return null;
 
   if (value instanceof Date) {
-    return Number.isNaN(value.getTime()) ? undefined : value;
+    return isNaN(value.getTime()) ? null : value;
   }
 
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    if (!trimmed) return undefined;
-
-    const match = /^\d{4}-\d{2}-\d{2}$/.exec(trimmed);
-    if (match) {
-      const [year, month, day] = match.slice(1).map(Number);
-      const parsed = new Date(year, month - 1, day, 12, 0, 0);
-      return Number.isNaN(parsed.getTime()) ? undefined : parsed;
-    }
-
-    const parsed = new Date(trimmed);
-    return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+  // For <input type="date"> values like "2026-08-25"
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return new Date(`${value}T00:00:00.000Z`);
   }
 
-  return undefined;
+  const parsed = new Date(value);
+
+  return isNaN(parsed.getTime()) ? null : parsed;
 };
