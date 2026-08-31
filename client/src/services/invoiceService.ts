@@ -31,7 +31,8 @@ export const createInvoice =
 export const getInvoices =
   async (
     page?: number,
-    limit?: number
+    limit?: number,
+    search = ""
   ) => {
 
   const response =
@@ -42,9 +43,9 @@ export const getInvoices =
           Authorization:
             `Bearer ${getToken()}`
         },
-        params: page
-          ? { page, limit: limit || 10 }
-          : {}
+        params: page !== undefined
+          ? { page, limit: limit || 10, search }
+          : { search }
       }
     );
 

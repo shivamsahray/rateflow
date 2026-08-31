@@ -815,6 +815,7 @@ function Invoices() {
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [deletingInvoice, setDeletingInvoice] = useState<Invoice | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // ── Pagination ──
   const PAGE_SIZE = 10;
@@ -828,7 +829,7 @@ function Invoices() {
       setError(null);
 
       try {
-        const data = await getInvoices(page, PAGE_SIZE);
+        const data = await getInvoices(page, PAGE_SIZE, searchTerm);
 
         // Backward compatible: agar service purana array hi de raha ho to bhi chal jaaye
         if (Array.isArray(data)) {
@@ -848,7 +849,7 @@ function Invoices() {
       }
     };
     void loadInvoices();
-  }, [page]);
+  }, [page, searchTerm]);
  
   const handleSaved = (updated: Invoice) => {
     setInvoices((prev) =>
@@ -867,7 +868,7 @@ function Invoices() {
         setPage((p) => p - 1);
       } else {
         // warna isi page ko refresh kar do
-        const data = await getInvoices(page, PAGE_SIZE);
+        const data = await getInvoices(page, PAGE_SIZE, searchTerm);
         if (Array.isArray(data)) {
           setInvoices(data);
         } else {
@@ -882,6 +883,11 @@ function Invoices() {
       setDeleting(false);
     }
   };
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setPage(1);
+  };
  
   return (
     <div className="min-h-screen bg-slate-50 p-6 lg:p-8">
@@ -895,6 +901,32 @@ function Invoices() {
               {totalInvoices} invoice{totalInvoices !== 1 ? "s" : ""} total
             </p>
           </div>
+        </div>
+
+        <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="relative w-full md:max-w-md">
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zm-6 4a6 6 0 1110.89 3.45l4.4 4.4a1 1 0 01-1.42 1.42l-4.4-4.4A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+            </span>
+            <input
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder="Search invoice #, customer, or phone"
+              className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+            />
+          </div>
+
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => handleSearch("")}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+            >
+              Clear search
+            </button>
+          )}
         </div>
  
         {/* Table */}

@@ -531,28 +531,50 @@ export const getInvoices = async (
 ) => {
   try {
     const tenantId = req.user?.tenantId;
-    const { page, limit } = req.query;
+    const pageParam = req.query.page;
+    const limitParam = req.query.limit;
+    const searchTerm = typeof req.query.search === "string" ? req.query.search.trim() : "";
 
-    // Agar page query param nahi bheja, purana behavior hi rahega (saari invoices, sorted latest-first)
-    if (!page) {
-      const invoices = await Invoice.find({ tenantId })
-        .populate("customerId", "name")
+    const pageNum = pageParam !== undefined ? Math.max(parseInt(String(pageParam)) || 1, 1) : null;
+    const limitNum = limitParam !== undefined ? Math.max(parseInt(String(limitParam)) || 10, 1) : 10;
+
+    const match: Record<string, any> = { tenantId };
+
+    if (searchTerm) {
+      const escapedSearch = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const searchPattern = new RegExp(escapedSearch, "i");
+      const matchingCustomers = await Customer.find({
+        tenantId,
+        $or: [
+          { name: searchPattern },
+          { phone: searchPattern },
+          { email: searchPattern },
+        ],
+      }).select("_id");
+
+      match.$or = [
+        { invoiceNumber: searchPattern },
+        ...(matchingCustomers.length > 0 ? [{ customerId: { $in: matchingCustomers.map((customer) => customer._id) } }] : []),
+      ];
+    }
+
+    if (!pageNum) {
+      const invoices = await Invoice.find(match)
+        .populate("customerId", "name phone")
         .sort({ invoiceDate: -1, createdAt: -1 });
 
       return res.json(invoices);
     }
 
-    const pageNum = Math.max(parseInt(page as string) || 1, 1);
-    const limitNum = Math.max(parseInt((limit as string) || "10") || 10, 1);
     const skip = (pageNum - 1) * limitNum;
 
     const [invoices, total] = await Promise.all([
-      Invoice.find({ tenantId })
-        .populate("customerId", "name")
-        .sort({ invoiceDate: -1, createdAt: -1 }) // latest invoices sabse pehle
+      Invoice.find(match)
+        .populate("customerId", "name phone")
+        .sort({ invoiceDate: -1, createdAt: -1 })
         .skip(skip)
         .limit(limitNum),
-      Invoice.countDocuments({ tenantId }),
+      Invoice.countDocuments(match),
     ]);
 
     return res.json({
