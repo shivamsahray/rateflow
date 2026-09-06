@@ -1990,7 +1990,7 @@ function InvoiceDetails() {
             <p className="mt-0 gap-0">
               <strong>Date:</strong>
               <span>
-                {new Date(invoice.createdAt).toLocaleDateString()}
+                {new Date(invoice.invoiceDate).toLocaleDateString()}
               </span>
             </p>
             

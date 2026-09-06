@@ -345,10 +345,23 @@ function CreateInvoice() {
 
     setIsSubmitting(true);
     try {
-     const invoice =
-        await createInvoice({
+      // Prepare invoiceDate: include current time when date is today,
+      // otherwise send midnight (00:00:00) for the selected date.
+      const todayStr = new Date().toISOString().split("T")[0];
+      let invoiceDateToSend: string;
 
-        invoiceDate,
+      if (invoiceDate === todayStr) {
+        // use current exact time
+        invoiceDateToSend = new Date().toISOString();
+      } else {
+        // construct local date at 00:00:00 for the selected day
+        const [y, m, d] = invoiceDate.split("-");
+        const dt = new Date(Number(y), Number(m) - 1, Number(d), 0, 0, 0);
+        invoiceDateToSend = dt.toISOString();
+      }
+
+      const invoice = await createInvoice({
+        invoiceDate: invoiceDateToSend,
         paymentStatus,
         notes,
         customerId,
@@ -357,9 +370,7 @@ function CreateInvoice() {
 
         items: items.map((item) => ({
           ...item,
-          amount:
-            item.quantity * item.price,
-            
+          amount: item.quantity * item.price,
         })),
       });
 

@@ -3164,8 +3164,8 @@ function InvoiceContentA4({ invoice }: { invoice: any }) {
   const grandTotal = subtotal + gstTotal;
   const amountInWords = convertAmountToWords(grandTotal);
  
-  const invoiceDate = invoice.createdAt
-    ? new Date(invoice.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+  const invoiceDate = invoice.invoiceDate
+    ? new Date(invoice.invoiceDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
     : "—";
  
   const defaultTerms = [
@@ -3330,8 +3330,8 @@ function InvoiceContentA5({ invoice }: { invoice: any }) {
   const grandTotal = subtotal + gstTotal;
   const amountInWords = convertAmountToWords(grandTotal);
  
-  const invoiceDate = invoice.createdAt
-    ? new Date(invoice.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+  const invoiceDate = invoice.invoiceDate
+    ? new Date(invoice.invoiceDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
     : "—";
 
   // ✅ NEW: Invoice-specific note (agar present hai)
